@@ -9,6 +9,6 @@ set(SOURCE src/client.c src/mexData.c src/tableFile.c)
 
 set(HEADER include/client.h include/mexData.h include/tableFile.h)
 
-add_executable(client main.c ${HEADER} ${SOURCE})
+add_executable(client main.c globalSet.h ${HEADER} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})

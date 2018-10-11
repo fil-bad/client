@@ -17,7 +17,9 @@
 #include <fcntl.h>
 #include <malloc.h>
 
-extern int fdOut;  //pipe di uscita per lo stdOut
+#include "../globalSet.h"
+
+//extern int fdOut;  //pipe di uscita per lo stdOut
 
 
 typedef struct mexInfo_ {

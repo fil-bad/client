@@ -250,7 +250,7 @@ time_t currTimeSys() {
 void printConv(conversation *c, int fdOutP) {
 	dprintf(fdOutP, "-------------------------------------------------------------\n");
 	dprintf(fdOutP, "\tLa Conversazione ha salvati i seguenti messaggi:\n");
-	dprintf(fdOutP, "\tsizeof(mex)=%d\tsizeof(mexInfo)=%d\tsizeof(convInfo)=%d\n", sizeof(mex), sizeof(mexInfo),
+	dprintf(fdOutP, "\tsizeof(mex)=%ld\tsizeof(mexInfo)=%ld\tsizeof(convInfo)=%ld\n", sizeof(mex), sizeof(mexInfo),
 	       sizeof(convInfo));
 	dprintf(fdOutP, "FILE stream pointer\t-> %p\n", c->stream);
 	dprintf(fdOutP, "\n\t[][]La Conversazione è:[][]\n\n");
@@ -265,7 +265,7 @@ void printConv(conversation *c, int fdOutP) {
 		dprintf(fdOutP, "**********\n");
 	}
 	dprintf(fdOutP, "-------------------------------------------------------------\n");
-	return;
+	//return;
 }
 
 void printMex(mex *m, int fdOutP) {
