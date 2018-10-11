@@ -78,7 +78,7 @@ int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
 
 void* thUserRX(connection *con);
-void* thUserTX(mail *pack);
+void* thUserTX(connection *con);
 
 #endif //CLIENT_CLIENT_H
 
