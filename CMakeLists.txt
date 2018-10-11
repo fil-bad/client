@@ -5,6 +5,10 @@ set(CMAKE_C_STANDARD 11)
 
 find_package(Threads)
 
-add_executable(client main.c client.c client.h)
+set(SOURCE src/client.c src/mexData.c src/tableFile.c)
+
+set(HEADER include/client.h include/mexData.h include/tableFile.h)
+
+add_executable(client main.c ${HEADER} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})

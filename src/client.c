@@ -2,7 +2,7 @@
 // Created by filippo on 25/09/18.
 //
 
-#include "client.h"
+#include "../include/client.h"
 
 
 /// GLOBAL FUNCTION
@@ -301,7 +301,7 @@ int loginUserSide(int ds_sock, mail *pack){
     return 0;
 }
 
-int createUser(int ds_sock, mail *pack){
+int  createUser(int ds_sock, mail *pack){
 
     char *sendBuf;
 
@@ -323,7 +323,8 @@ int createUser(int ds_sock, mail *pack){
     }
 
     switch (pack->md.type){
-        case success_p:
+        case success_p: //sostituire questa e quella sopra con dataUS_p, otteniamo sempre una tabella (
+        // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\nID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
             int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
             return id;
