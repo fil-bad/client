@@ -325,7 +325,8 @@ int createUser(int ds_sock, mail *pack){
     switch (pack->md.type){
         case success_p:
             printf("Creazione effettuata\nID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
-            return 0;
+            int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
+            return id;
             break;
 
         case failed_p:

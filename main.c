@@ -144,7 +144,8 @@ int clientDemo(int argc, char *argv[]) {
             return -1;
         }
     } else if (strcmp(buff, "creaUser") == 0) {
-        if (createUser(con->ds_sock, pack) == -1) {
+        UserID = createUser(con->ds_sock, pack);
+        if ( UserID == -1) {
             return -1;
         }
     } else {
@@ -185,7 +186,7 @@ void *thUserRX(connection *con) {
 
         printf("\n\nRitorno\n");
 
-        if(readPack(con->ds_sock, packSend) == -1){
+        if(readPack(con->ds_sock, packSend) ==-1){
             pthread_exit(NULL);
         }
         printPack(packSend);
