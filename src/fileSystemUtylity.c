@@ -5,7 +5,7 @@
 #include "../include/fileSystemUtylity.h"
 
 
-int StartServerStorage(char *storage)  //apre o crea un nuovo storage per il database
+int StartClientStorage(char *storage)  //apre o crea un nuovo storage per il database
 {
 	/* modifica il path reference dell'env per "spostare" il programma nella nuova locazione
 	 * la variabile PWD contiene il path assoluto, della working directory, ed è aggiornata da una sheel
@@ -47,58 +47,58 @@ int StartServerStorage(char *storage)  //apre o crea un nuovo storage per il dat
 	printf("[1]---> success\n\n");
 
 
-	/**** Si verifica che la cartella a cui si è arrivata sia già un server, e se non allora si inizializza ****/
-
-	printf("[2]---> Fase 2 Stabilire se la cartella è Valida/Validabile/INVALIDA\n\n");
-
-	printf("## ");
-
-	int confId = open(serverConfFile, O_RDWR, 0666);
-	if (confId == -1)  //sono presenti errori
-	{
-		perror("errore in open('serverStat.conf')");
-		if (errno == 2)//file non presente
-		{
-			nameList *dir = allDir();
-			nameListPrint(dir);
-
-			if (dir->nMemb == 0)
-			{
-				//non sono presenti cartelle di alcun tipo,la directory è quindi valida, creo il file config
-				printf("La cartella non è valida, non sono presenti file o cartelle estrane\nProcedo alla creazione di serverStat.conf\n");
-				creatServerStatConf(); //la funzione inizializza in ram e su hard-disc il file serverConfFile
-				mkdir(userDirName, 0777);
-				mkdir(chatDirName, 0777);
-
-			} else {    //è presente altro e la cartella non è valida per inizializzare il server
-				printf("La cartella non è valida e neanche validabile.\nNon si può procedere all'avvio del server\n");
-				errno = EACCES;
-				return -1;
-			}
-			nameListFree(dir);
-		}
-	} else {
-
-		printf("La cartella era già uno storage per il server\n");
-		//procedo a caricare i dati del serverConfFile
-		lseek(confId, 0, SEEK_SET);
-		read(confId, &serStat.statFile, sizeof(serStat.statFile));
-		printf("caricamento dalla memoria eseguito\n");
-		serStat.fd = confId;
-		if (sem_init(&serStat.lock, 0, 1)) {
-			perror("serStat semaphore init take error: ");
-			return -1;
-		}
-
-	}
-	printServStat(STDOUT_FILENO);
-	if (strcmp(firmwareVersion, serStat.statFile.firmware_V) != 0) {
-		errno = ENOTTY;
-		return -1;
-	}
-
-	//close(confId);    meglio lasciarlo aperto per permettere l'override del file durante la creazione di nuove chat e user per aggiornare l'id
-	printf("[2]---> success\n\n");
+//	/**** Si verifica che la cartella a cui si è arrivata sia già un server, e se non allora si inizializza ****/
+	//
+//	printf("[2]---> Fase 2 Stabilire se la cartella è Valida/Validabile/INVALIDA\n\n");
+	//
+//	printf("## ");
+	//
+//	int confId = open(serverConfFile, O_RDWR, 0666);
+//	if (confId == -1)  //sono presenti errori
+//	{
+//		perror("errore in open('serverStat.conf')");
+//		if (errno == 2)//file non presente
+//		{
+//			nameList *dir = allDir();
+//			nameListPrint(dir);
+	//
+//			if (dir->nMemb == 0)
+//			{
+//				//non sono presenti cartelle di alcun tipo,la directory è quindi valida, creo il file config
+//				printf("La cartella non è valida, non sono presenti file o cartelle estrane\nProcedo alla creazione di serverStat.conf\n");
+//				creatServerStatConf(); //la funzione inizializza in ram e su hard-disc il file serverConfFile
+//				mkdir(userDirName, 0777);
+//				mkdir(chatDirName, 0777);
+	//
+//			} else {    //è presente altro e la cartella non è valida per inizializzare il server
+//				printf("La cartella non è valida e neanche validabile.\nNon si può procedere all'avvio del server\n");
+//				errno = EACCES;
+//				return -1;
+//			}
+//			nameListFree(dir);
+//		}
+//	} else {
+	//
+//		printf("La cartella era già uno storage per il server\n");
+//		//procedo a caricare i dati del serverConfFile
+//		lseek(confId, 0, SEEK_SET);
+//		read(confId, &serStat.statFile, sizeof(serStat.statFile));
+//		printf("caricamento dalla memoria eseguito\n");
+//		serStat.fd = confId;
+//		if (sem_init(&serStat.lock, 0, 1)) {
+//			perror("serStat semaphore init take error: ");
+//			return -1;
+//		}
+	//
+//	}
+//	printServStat(STDOUT_FILENO);
+//	if (strcmp(firmwareVersion, serStat.statFile.firmware_V) != 0) {
+//		errno = ENOTTY;
+//		return -1;
+//	}
+	//
+//	//close(confId);    meglio lasciarlo aperto per permettere l'override del file durante la creazione di nuove chat e user per aggiornare l'id
+//	printf("[2]---> success\n\n");
 
 	return 0;   //avvio conInfo successo
 }
@@ -415,7 +415,7 @@ int serStat_addchat_lock() {
 		perror("serStat sem_post take error: ");
 		return -1;
 	}
-    printServStat(fdOut);
+	printServStat(fdOut);
 	overrideServerStatConf();
 	return 0;
 }
@@ -516,7 +516,7 @@ void nameListFree(nameList *nl) {
 int filterDirChat(const struct dirent *entry) {
 	/** Visualizza qualsiasi directory escludendo la user**/
 	if ((entry->d_type == DT_DIR) && (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0 &&
-	                                  strcmp(entry->d_name, userDirName) != 0)) {
+									  strcmp(entry->d_name, userDirName) != 0)) {
 		return 1;
 	}
 	return 0;
@@ -533,7 +533,7 @@ int filterDir(const struct dirent *entry) {
 int filterDirAndFile(const struct dirent *entry) {
 	/** visualizza se è una directory o file, ignorando . e ..**/
 	if (((entry->d_type == DT_DIR) || (entry->d_type == DT_REG)) &&
-	    (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)) {
+		(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)) {
 		return 1;
 	}
 	return 0;

@@ -4,6 +4,11 @@
 #include <semaphore.h>
 
 #include "include/client.h"
+#include "include/tableFile.h"
+#include "include/fileSystemUtylity.h"
+#include "include/mexData.h"
+#include "globalSet.h"
+
 
 int UserID; // ID restituito al termine della creazione utente
 
@@ -39,6 +44,12 @@ int clientDemo(int argc, char *argv[]) {
     }
 
     if (pack->md.type == dataUs_p){
+
+        //buff = obtainStr(buff);
+        if (StartClientStorage("ChatList") == -1){ //poi usare il buff per renderlo adattabile
+            return -1; // GESTIONE USCITA
+        }
+
         printf("Welcome, you can talk over following chat; please choose one:\n");
 
         // salvataggio tabella ricevuta ed apertura

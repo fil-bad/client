@@ -48,8 +48,8 @@ typedef struct serverStat_ {
 typedef struct infoChat_ {
 	table *tab;
 	conversation *conv;
-    char myName[128];   //path della mia chat
-    int fdTemp;         //file temporaneo, probabilemente non serve più
+	char myName[128];   //path della mia chat
+	int fdTemp;         //file temporaneo, probabilemente non serve più
 } infoChat;
 
 typedef struct infoUser_ {
@@ -62,11 +62,14 @@ typedef struct infoUser_ {
 serverStat serStat;
 
 /** PROTOTIPI   **/
-///Funzioni di avvio e terminazione Server
-//all'avvio del server esso inizializza il sistema, le directory ecc..
-int StartServerStorage(char *storage_name);
 
-///Funzioni di per operare sulle chat
+///CLIENT
+// Inizializzazione client
+int StartClientStorage(char *storage_name);
+
+///Funzioni di avvio e terminazione Server
+
+///Funzioni per operare sulle chat
 infoChat *newRoom(char *name, int adminId);
 
 infoChat *openRoom(char *pathDir);

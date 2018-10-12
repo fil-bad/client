@@ -23,26 +23,26 @@
 
 
 typedef struct mexInfo_ {
-	int usId;
-	time_t timeM;
+    int usId;
+    time_t timeM;
 } mexInfo;
 
 typedef struct mex_ {
-	mexInfo info;
-	char *text;
+    mexInfo info;
+    char *text;
 } mex;
 
 typedef struct convInfo_ {
-	int nMex;
-	time_t timeCreate;
-	int adminId;
+    int nMex;
+    time_t timeCreate;
+    int adminId;
 } convInfo;
 
 
 typedef struct conversation_ {
-	convInfo head;
-	mex **mexList;      //per permettere un add più semplice e variabile è gestita a liste
-	FILE *stream;
+    convInfo head;
+    mex **mexList;      //per permettere un add più semplice e variabile è gestita a liste
+    FILE *stream;
 } conversation;
 
 
