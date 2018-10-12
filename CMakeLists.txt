@@ -5,9 +5,9 @@ set(CMAKE_C_STANDARD 11)
 
 find_package(Threads)
 
-set(SOURCE src/client.c src/mexData.c src/tableFile.c)
+set(SOURCE src/client.c src/mexData.c src/tableFile.c src/fileSystemUtylity.c)
 
-set(HEADER include/client.h include/mexData.h include/tableFile.h)
+set(HEADER include/client.h include/mexData.h include/tableFile.h include/fileSystemUtylity.h)
 
 add_executable(client main.c globalSet.h ${HEADER} ${SOURCE})
 

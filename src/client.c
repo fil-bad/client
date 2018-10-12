@@ -282,7 +282,7 @@ int loginUserSide(int ds_sock, mail *pack){
     }
 
     switch (pack->md.type){
-        case success_p:
+        case dataUs_p:
             printf("Login effettuato\n");
             return 0;
             break;
@@ -323,7 +323,7 @@ int  createUser(int ds_sock, mail *pack){
     }
 
     switch (pack->md.type){
-        case success_p: //sostituire questa e quella sopra con dataUS_p, otteniamo sempre una tabella (
+        case dataUs_p: //sostituire questa e quella sopra con dataUS_p, otteniamo sempre una tabella (
         // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\nID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
             int id = (int)strtol(pack->md.whoOrWhy,NULL,10);

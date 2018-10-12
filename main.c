@@ -37,10 +37,14 @@ int clientDemo(int argc, char *argv[]) {
         printf("Caso non supportato; riprovare\n");
         goto retry;
     }
-    mail *packSend = malloc(sizeof(mail));
+
+    if (pack->md.type == dataUs_p){
+        printf("Welcome, you can talk over following chat; please choose one:\n");
+
+        // salvataggio tabella ricevuta ed apertura
+    }
 
     pthread_t tidRX, tidTX;
-
     pthread_create(&tidRX, NULL, thUserRX, NULL);
     pthread_create(&tidTX, NULL, thUserTX, NULL);
 
@@ -52,7 +56,13 @@ int clientDemo(int argc, char *argv[]) {
 
 void *thUserRX(connection *con) {
 
-
+    mail *packReceive = malloc(sizeof(mail));
+    do {
+        if(readPack(con->ds_sock, packReceive) == -1){
+            pthread_exit(NULL);
+        }
+        printPack(packReceive);
+    } while (packReceive->md.type != exitRm_p);
 }
 
 
