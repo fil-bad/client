@@ -164,7 +164,7 @@ FILE *openTabF(char *path) {
 		perror("open FD for Tab take error:");
 		return NULL;
 	}
-	FILE *f = fdopen(tabFd, "r+");
+	FILE *f = fdopen(tabFd, "r+"); //MODDED LINE
 	if (f == NULL) {
 		perror("tab open error:");
 		return NULL;

@@ -324,7 +324,7 @@ int  createUser(int ds_sock, mail *pack){
 
     switch (pack->md.type){
         case dataUs_p: //sostituire questa e quella sopra con dataUS_p, otteniamo sempre una tabella (
-        // (anche vuota, dove scrivere le chat)
+            // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\nID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
             int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
             return id;
@@ -341,5 +341,44 @@ int  createUser(int ds_sock, mail *pack){
             return -1;
             break;
     }
+    return 0;
+}
+
+int createRoom(int ds_sock, mail *pack){
+    printf("Creazione nuova chat; scegliere il nome:\n");
+
+    char *buff;
+    buff = obtainStr(buff);
+
+    fillPack(pack,mkRoom_p,0,NULL,"UTENTE",buff); //todo: decidere se nome_chat sara' in mex o in whoOrWhy
+
+    if (writePack(ds_sock, pack) == -1){
+        return -1;
+    }
+    //Pacchetto mandato, in attesa di risposta server
+    if (readPack(ds_sock,pack) == -1){
+        return -1;
+    }
+
+    switch (pack->md.type){
+        case success_p:
+            // (anche vuota, dove scrivere le chat)
+            printf("Creazione effettuata\nNome Chat = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            return 0;
+            break;
+
+        case failed_p:
+            printf("Creazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
+            errno = ENOMEM;
+            return -1;
+            break;
+        default:
+            printf("Unespected behaviour from server.\n");
+            errno = EINVAL;
+            return -1;
+            break;
+    }
+
+
     return 0;
 }

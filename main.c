@@ -43,21 +43,41 @@ int clientDemo(int argc, char *argv[]) {
         goto retry;
     }
 
-    if (pack->md.type == dataUs_p){
+    //buff = obtainStr(buff);
+    if (StartClientStorage("ChatList") == -1){ //poi usare il buff per renderlo adattabile
+        return -1; // GESTIONE USCITA
+    }
+    FILE *temp = fopen(chatTable, "w+");
+    if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
+        printf("Error writing file\n");
+        return -1;
+    }
+    fclose(temp);
+    printf("file scritto.\n");
+    table *tabChats = open_Tab(chatTable);
+    printf("opentab fatto.\n");
+    if (tabChats == NULL){
+        printf("Errore apertura Tabella Chat.\n");
+        return -1;
+    }
 
-        //buff = obtainStr(buff);
-        if (StartClientStorage("ChatList") == -1){ //poi usare il buff per renderlo adattabile
-            return -1; // GESTIONE USCITA
+    printf("Welcome, you can talk over following chat.\nPlease choose one: (otherwise write 'newChat')\n");
+
+    tabPrint(tabChats);
+    // salvataggio tabella ricevuta ed apertura
+    buff = obtainStr(buff);
+
+    if(strcmp(buff,"newChat") == 0){
+        if(createRoom(con->ds_sock, pack) == -1){
+            printf("Creation failed.\n");
+            return -1;
         }
-
-        printf("Welcome, you can talk over following chat; please choose one:\n");
-
-        // salvataggio tabella ricevuta ed apertura
+        //Aggiungere il caso che, se abbiamo generato una chat, ci vogliamo entrare dentro
     }
 
     pthread_t tidRX, tidTX;
-    pthread_create(&tidRX, NULL, thUserRX, NULL);
-    pthread_create(&tidTX, NULL, thUserTX, NULL);
+    pthread_create(&tidRX, NULL, thUserRX, con);
+    //pthread_create(&tidTX, NULL, thUserTX, con);
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
@@ -74,6 +94,8 @@ void *thUserRX(connection *con) {
         }
         printPack(packReceive);
     } while (packReceive->md.type != exitRm_p);
+    free(packReceive);
+    pthread_exit(NULL);
 }
 
 
@@ -82,6 +104,7 @@ void* thUserTX(connection *con){
     char *buff;
 
     do {
+        printf("Inserire un messaggio: ");
         buff = obtainStr(buff);
 
         fillPack(packSend, mess_p, strlen(buff)+1, buff, "UTENTE", "ID"); //Utente e ID sono valori ottenuti dopo login
