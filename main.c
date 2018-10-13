@@ -70,7 +70,7 @@ int clientDemo(int argc, char *argv[]) {
     buff = obtainStr(buff);
 
     if(strcmp(buff,"newChat") == 0){
-        if(createRoom(con->ds_sock, pack) == -1){
+        if(createRoom(con->ds_sock, pack,tabChats) == -1){
             printf("Creation failed.\n");
             return -1;
         }

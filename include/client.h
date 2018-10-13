@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <poll.h>
 #include <signal.h>
+#include "tableFile.h"
 
 #define fflush(stdin) while(getchar() != '\n')
 
@@ -76,7 +77,7 @@ char *obtainStr(char *);
 
 int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
-int createRoom(int ds_sock, mail *pack);
+int createRoom(int ds_sock, mail *pack, table *tabChats);
 
 void* thUserRX(connection *con);
 void* thUserTX(connection *con);

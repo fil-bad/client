@@ -3,6 +3,7 @@
 //
 
 #include "../include/client.h"
+#include "../include/tableFile.h"
 
 
 /// GLOBAL FUNCTION
@@ -344,7 +345,7 @@ int  createUser(int ds_sock, mail *pack){
     return 0;
 }
 
-int createRoom(int ds_sock, mail *pack){
+int createRoom(int ds_sock, mail *pack, table *tabChats){
     printf("Creazione nuova chat; scegliere il nome:\n");
 
     char *buff;
@@ -364,6 +365,7 @@ int createRoom(int ds_sock, mail *pack){
         case success_p:
             // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\nNome Chat = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            addEntry(tabChats,pack->md.whoOrWhy,0); //non so quale sia il valore data
             return 0;
             break;
 
