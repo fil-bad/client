@@ -61,6 +61,8 @@ int clientDemo(int argc, char *argv[]) {
         return -1;
     }
 
+    createdChat: // tale label permette di re-listare tutte le chat (compresa quella appena aggiunta)
+
     printf("Welcome, you can talk over following chat.\nPlease choose one: (otherwise write 'newChat')\n");
 
     tabPrint(tabChats);
@@ -72,7 +74,10 @@ int clientDemo(int argc, char *argv[]) {
             printf("Creation failed.\n");
             return -1;
         }
-        //Aggiungere il caso che, se abbiamo generato una chat, ci vogliamo entrare dentro
+        else {
+            //aggiungere la nuova chat nella tabella, per poi re-listarle
+            goto createdChat;
+        }
     }
 
     pthread_t tidRX, tidTX;
