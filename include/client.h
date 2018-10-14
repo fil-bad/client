@@ -78,6 +78,7 @@ char *obtainStr(char *);
 int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
 int createRoom(int ds_sock, mail *pack, table *tabChats);
+int joinRoom(int ds_sock, mail *pack, int numEntry);
 
 void* thUserRX(connection *con);
 void* thUserTX(connection *con);

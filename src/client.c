@@ -384,3 +384,40 @@ int createRoom(int ds_sock, mail *pack, table *tabChats){
 
     return 0;
 }
+
+int joinRoom(int ds_sock, mail *pack, int numEntry){
+    char *buff[sizeof(pack->md.whoOrWhy)]; //sempre capire se limitiamo il nome chat a 24 caratteri
+
+    sprintf(buff,"%d",numEntry);
+
+    fillPack(pack,joinRm_p,0,NULL,"UTENTE",buff); //todo: decidere se nome_chat sara' in mex o in whoOrWhy
+
+    if (writePack(ds_sock, pack) == -1){
+        return -1;
+    }
+    //Pacchetto mandato, in attesa di risposta server
+    if (readPack(ds_sock,pack) == -1){
+        return -1;
+    }
+
+    switch (pack->md.type){
+        case success_p:
+            // (anche vuota, dove scrivere le chat)
+            printf("Join effettuato\n"); //o mex, a seconda della decisione sopra
+            return 0;
+            break;
+
+        case failed_p:
+            printf("Join non effettuato\nServer Report: %s\n", pack->md.whoOrWhy);
+            errno = ENOMEM;
+            return -1;
+            break;
+        default:
+            printf("Unespected behaviour from server.\n");
+            errno = EINVAL;
+            return -1;
+            break;
+    }
+
+    return 0;
+}

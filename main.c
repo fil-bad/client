@@ -72,17 +72,30 @@ int clientDemo(int argc, char *argv[]) {
     if(strcmp(buff,"newChat") == 0){
         if(createRoom(con->ds_sock, pack,tabChats) == -1){
             printf("Creation failed.\n");
-            return -1;
+            return -1; //potrebbe essere utile lato utente tornare alla selezione chat
         }
         else {
             //aggiungere la nuova chat nella tabella, per poi re-listarle
             goto createdChat;
         }
     }
+    else{
+        int numEntry = searchFirstEntry(tabChats,buff);//gestire meglio il cerca per non compiere azioni ridondanti
+
+        if( numEntry == -1){
+            printf("Chat not exists, please choose one of the following, or create one.\n");
+            goto createdChat;
+        }
+        else{
+            if(joinRoom(con->ds_sock, pack, numEntry) == -1){
+                printf("Unable to join the chat. Returning to chat selection...\n");
+            }
+        }
+    }
 
     pthread_t tidRX, tidTX;
     pthread_create(&tidRX, NULL, thUserRX, con);
-    //pthread_create(&tidTX, NULL, thUserTX, con);
+    pthread_create(&tidTX, NULL, thUserTX, con);
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
@@ -132,6 +145,7 @@ void* thUserTX(connection *con){
     free(packSend->mex);
     free(packSend);
     close(con->ds_sock);
+    ///gestire il ritorno alla scelta della chat
     pthread_exit(NULL);
 }
 
