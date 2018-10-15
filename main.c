@@ -9,6 +9,7 @@
 #include "include/mexData.h"
 #include "globalSet.h"
 
+int PID;
 
 int UserID; // ID restituito al termine della creazione utente
 
@@ -94,6 +95,9 @@ int clientDemo(int argc, char *argv[]) {
         }
     }
 
+
+    PID = getpid();
+
     pthread_t tidRX, tidTX;
     pthread_create(&tidRX, NULL, thUserRX, con);
     pthread_create(&tidTX, NULL, thUserTX, con);
@@ -101,6 +105,9 @@ int clientDemo(int argc, char *argv[]) {
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
     pause();
+
+    goto createdChat;
+
     return 0;
 }
 
@@ -146,6 +153,7 @@ void* thUserTX(connection *con){
     free(packSend->mex);
     free(packSend);
     close(con->ds_sock);
+    kill(PID,0);
     ///gestire il ritorno alla scelta della chat
     pthread_exit(NULL);
 }
