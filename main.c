@@ -71,7 +71,7 @@ int clientDemo(int argc, char *argv[]) {
     // salvataggio tabella ricevuta ed apertura
     buff = obtainStr(buff);
 
-    if(strcmp(buff,"newChat") == 0){
+    if(strcmp(buff,"newChat") == 0){ //todo: andare su terminalshell.c e copiare lo strtok
         if(createRoom(con->ds_sock, pack,tabChats) == -1){
             printf("Creation failed.\n");
             return -1; //potrebbe essere utile lato utente tornare alla selezione chat

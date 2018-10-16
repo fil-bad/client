@@ -366,7 +366,7 @@ int createRoom(int ds_sock, mail *pack, table *tabChats){
         case success_p:
             // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\nResult = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
-            addEntry(tabChats,pack->md.whoOrWhy,0); //non so quale sia il valore data
+            addEntry(tabChats,pack->md.whoOrWhy,0); //todo: non so quale sia il valore data (deve dirlo il server)
             return 0;
             break;
 
