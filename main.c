@@ -104,7 +104,8 @@ int clientDemo(int argc, char *argv[]) {
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
-    pause();
+    raise(SIGSTOP); //discutere se puo' essere una soluzione
+    //pause();
 
     goto createdChat;
 
@@ -140,6 +141,8 @@ void* thUserTX(connection *con){
         }
         printPack(packSend);
 
+        /*
+
         // inizio parte per il testing mono-thread
 
         printf("\n\nRitorno\n");
@@ -148,12 +151,13 @@ void* thUserTX(connection *con){
             pthread_exit(NULL);
         }
         printPack(packSend);
+        */
 
     } while (strcmp(packSend->mex, "quit") != 0);
     free(packSend->mex);
     free(packSend);
     close(con->ds_sock);
-    kill(PID,0);
+    kill(PID,SIGCONT);
     ///gestire il ritorno alla scelta della chat
     pthread_exit(NULL);
 }
