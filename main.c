@@ -54,15 +54,15 @@ int clientDemo(int argc, char *argv[]) {
         return -1;
     }
     fclose(temp);
-    printf("file scritto.\n");
+    //printf("file scritto.\n");
     table *tabChats = open_Tab(chatTable);
-    printf("opentab fatto.\n");
+    //printf("opentab fatto.\n");
     if (tabChats == NULL){
         printf("Errore apertura Tabella Chat.\n");
         return -1;
     }
 
-    createdChat: // tale label permette di re-listare tutte le chat (compresa quella appena aggiunta)
+    createdChat: // label che permette di re-listare tutte le chat (compresa quella appena aggiunta)
 
     printf("\nWelcome, you can talk over following chat:\n");
     tabPrint(tabChats);

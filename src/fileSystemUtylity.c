@@ -13,11 +13,11 @@ int StartClientStorage(char *storage)  //apre o crea un nuovo storage per il dat
 	 * Di conseguenza bisogna prima modificare il path del processo e sucessivamente aggiornare l'env     *
 	 */
 
-	printf("[1]---> Fase 1, aprire lo storage\n");
+	//printf("[1]---> Fase 1, aprire lo storage\n");
 
 	int errorRet;
 	errorRet = chdir(storage);                        //modifico l'attuale directory di lavoro del processo
-	if (errorRet != 0)    //un qualche errore nel ragiungimento della cartella
+	if (errorRet != 0)    //un qualche errore nel raggiungimento della cartella
 	{
 		switch (errno) {
 			case 2: //No such file or directory
@@ -43,62 +43,8 @@ int StartClientStorage(char *storage)  //apre o crea un nuovo storage per il dat
 	char curDirPath[100];
 	errorRet = setenv("PWD", getcwd(curDirPath, 100), true);    //aggiorno l'env per il nuovo pwd
 	if (errorRet != 0) perror("setEnv('PWD')");
-	printf("Current Directory set:\n-->\tgetcwd()=%s\n-->\tPWD=%s\n\n", curDirPath, getenv("PWD"));
-	printf("[1]---> success\n\n");
-
-
-//	/**** Si verifica che la cartella a cui si è arrivata sia già un server, e se non allora si inizializza ****/
-	//
-//	printf("[2]---> Fase 2 Stabilire se la cartella è Valida/Validabile/INVALIDA\n\n");
-	//
-//	printf("## ");
-	//
-//	int confId = open(serverConfFile, O_RDWR, 0666);
-//	if (confId == -1)  //sono presenti errori
-//	{
-//		perror("errore in open('serverStat.conf')");
-//		if (errno == 2)//file non presente
-//		{
-//			nameList *dir = allDir();
-//			nameListPrint(dir);
-	//
-//			if (dir->nMemb == 0)
-//			{
-//				//non sono presenti cartelle di alcun tipo,la directory è quindi valida, creo il file config
-//				printf("La cartella non è valida, non sono presenti file o cartelle estrane\nProcedo alla creazione di serverStat.conf\n");
-//				creatServerStatConf(); //la funzione inizializza in ram e su hard-disc il file serverConfFile
-//				mkdir(userDirName, 0777);
-//				mkdir(chatDirName, 0777);
-	//
-//			} else {    //è presente altro e la cartella non è valida per inizializzare il server
-//				printf("La cartella non è valida e neanche validabile.\nNon si può procedere all'avvio del server\n");
-//				errno = EACCES;
-//				return -1;
-//			}
-//			nameListFree(dir);
-//		}
-//	} else {
-	//
-//		printf("La cartella era già uno storage per il server\n");
-//		//procedo a caricare i dati del serverConfFile
-//		lseek(confId, 0, SEEK_SET);
-//		read(confId, &serStat.statFile, sizeof(serStat.statFile));
-//		printf("caricamento dalla memoria eseguito\n");
-//		serStat.fd = confId;
-//		if (sem_init(&serStat.lock, 0, 1)) {
-//			perror("serStat semaphore init take error: ");
-//			return -1;
-//		}
-	//
-//	}
-//	printServStat(STDOUT_FILENO);
-//	if (strcmp(firmwareVersion, serStat.statFile.firmware_V) != 0) {
-//		errno = ENOTTY;
-//		return -1;
-//	}
-	//
-//	//close(confId);    meglio lasciarlo aperto per permettere l'override del file durante la creazione di nuove chat e user per aggiornare l'id
-//	printf("[2]---> success\n\n");
+	//printf("Current Directory set:\n-->\tgetcwd()=%s\n-->\tPWD=%s\n\n", curDirPath, getenv("PWD"));
+	//printf("[1]---> success\n\n");
 
 	return 0;   //avvio conInfo successo
 }

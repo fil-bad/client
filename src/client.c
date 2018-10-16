@@ -38,7 +38,7 @@ int keepAlive(int *ds_sock){
     /// Impostamo i valori temporali degli ACK
 
     // Tempo di primo ACK (tcp_keepalive_time)
-    optval = 30; //tempo in secondi
+    optval = 90; //tempo in secondi
     optlen = sizeof(optval);
     if(setsockopt(*ds_sock, IPPROTO_TCP , TCP_KEEPIDLE, &optval, optlen) < 0) {
         perror("setsockopt()");
@@ -64,7 +64,7 @@ int keepAlive(int *ds_sock){
         return -1;
     }
 
-    // IN CASO DI MANCATA RISPOSTA IN UN MINUTO, L'UTENTE RISULTERA' SCOLLEGATO!
+    // IN CASO DI MANCATA RISPOSTA IN DUE MINUTI, L'UTENTE RISULTERA' SCOLLEGATO!
 
     // Attiviamo il keepalive
     optval = 1;
@@ -75,7 +75,7 @@ int keepAlive(int *ds_sock){
         return -1;
     }
 
-    printf("SO_KEEPALIVE set on socket\n");
+    //printf("SO_KEEPALIVE set on socket\n");
     return 0;
 }
 
@@ -365,7 +365,7 @@ int createRoom(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\nResult = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
             addEntry(tabChats,pack->md.whoOrWhy,0); //todo: non so quale sia il valore data (deve dirlo il server)
             return 0;
             break;
