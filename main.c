@@ -64,7 +64,7 @@ int clientDemo(int argc, char *argv[]) {
 
     createdChat: // tale label permette di re-listare tutte le chat (compresa quella appena aggiunta)
 
-    printf("Welcome, you can talk over following chat.\n");
+    printf("\nWelcome, you can talk over following chat:\n");
     tabPrint(tabChats);
 
     printf("\nPlease choose one: (otherwise write 'newChat')\n");

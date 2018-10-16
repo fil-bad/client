@@ -5,6 +5,8 @@
 #include "../include/client.h"
 #include "../include/tableFile.h"
 
+char *USERNAME;
+char* ID;
 
 /// GLOBAL FUNCTION
 connection* initSocket(u_int16_t port, char* IP)
@@ -262,16 +264,14 @@ char *obtainStr(char *buff){
 
 int loginUserSide(int ds_sock, mail *pack){
 
-    char *sendBuf, *wowBuf;
-
     printf("Fase di Login; inserire Username ed ID\n");
     printf("USER (max 24 caratteri): ");
-    sendBuf = obtainStr(sendBuf);
+    USERNAME = obtainStr(USERNAME);
     printf("\nID univoco: ");
-    wowBuf = obtainStr(wowBuf);
+    ID = obtainStr(ID);
     printf("\n");
 
-    if (fillPack(pack,login_p,0,NULL,sendBuf, wowBuf) == -1){ //utente e id saranno passati da scanf
+    if (fillPack(pack,login_p,0,NULL,USERNAME, ID) == -1){ //utente e id saranno passati da scanf
         return -1;
     }
     if (writePack(ds_sock, pack) == -1){
@@ -283,7 +283,7 @@ int loginUserSide(int ds_sock, mail *pack){
     }
 
     switch (pack->md.type){
-        case dataUs_p:
+        case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
             printf("Login effettuato\n");
             return 0;
             break;
@@ -304,15 +304,12 @@ int loginUserSide(int ds_sock, mail *pack){
 
 int  createUser(int ds_sock, mail *pack){
 
-    char *sendBuf;
-
-
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 24 caratteri): ");
-    sendBuf = obtainStr(sendBuf);
+    USERNAME = obtainStr(USERNAME);
     printf("\n");
 
-    if (fillPack(pack,mkUser_p,0,NULL,sendBuf, NULL) == -1){ //utente e id saranno passati da scanf
+    if (fillPack(pack,mkUser_p,0,NULL,USERNAME, NULL) == -1){ //id sara' dato dal server
         return -1;
     }
     if (writePack(ds_sock, pack) == -1){
@@ -324,9 +321,13 @@ int  createUser(int ds_sock, mail *pack){
     }
 
     switch (pack->md.type){
-        case dataUs_p: //sostituire questa e quella sopra con dataUS_p, otteniamo sempre una tabella (
-            // (anche vuota, dove scrivere le chat)
+        case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\nID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
+
+            ID = malloc(24);
+            strcpy(ID,pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
+
+            printf("### ID = %s ###\n",ID);
             int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
             return id;
             break;
@@ -350,8 +351,8 @@ int createRoom(int ds_sock, mail *pack, table *tabChats){
 
     char *buff;
     buff = obtainStr(buff);
-
-    fillPack(pack,mkRoom_p,0,NULL,"UTENTE",buff); //todo: decidere se nome_chat sara' in mex o in whoOrWhy
+    // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
+    fillPack(pack,mkRoom_p,strlen(buff)+1,buff,USERNAME,ID);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
@@ -364,7 +365,7 @@ int createRoom(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\nNome Chat = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            printf("Creazione effettuata\nResult = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
             addEntry(tabChats,pack->md.whoOrWhy,0); //non so quale sia il valore data
             return 0;
             break;
@@ -390,7 +391,7 @@ int joinRoom(int ds_sock, mail *pack, int numEntry){
 
     sprintf(buff,"%d",numEntry);
 
-    fillPack(pack,joinRm_p,0,NULL,"UTENTE",buff); //todo: decidere se nome_chat sara' in mex o in whoOrWhy
+    fillPack(pack,joinRm_p,strlen(buff)+1,buff,USERNAME,ID);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
