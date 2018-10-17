@@ -5,8 +5,8 @@
 #include "../include/client.h"
 #include "../include/tableFile.h"
 
-char *USERNAME;
-char* ID;
+extern char *UserName;
+extern char* UserID;
 
 /// GLOBAL FUNCTION
 connection* initSocket(u_int16_t port, char* IP)
@@ -264,14 +264,21 @@ char *obtainStr(char *buff){
 
 int loginUserSide(int ds_sock, mail *pack){
 
-    printf("Fase di Login; inserire Username ed ID\n");
-    printf("USER (max 24 caratteri): ");
-    USERNAME = obtainStr(USERNAME);
-    printf("\nID univoco: ");
-    ID = obtainStr(ID);
+    rescue: //risolvere consistenza stringhe
+
+    printf("Fase di Login; inserire Username ed UserID\n");
+    printf("USER (max 23 caratteri): >>>");
+    UserName = obtainStr(UserName);
+    if(strlen(UserName) >= 25){
+        printf("You've inserted more character than allowed; retry.\n");
+        goto rescue;
+    }
+
+    printf("\nUserID univoco: ");
+    UserID = obtainStr(UserID);
     printf("\n");
 
-    if (fillPack(pack,login_p,0,NULL,USERNAME, ID) == -1){ //utente e id saranno passati da scanf
+    if (fillPack(pack,login_p,0,NULL,UserName, UserID) == -1){ //utente e id saranno passati da scanf
         return -1;
     }
     if (writePack(ds_sock, pack) == -1){
@@ -306,10 +313,10 @@ int  createUser(int ds_sock, mail *pack){
 
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 24 caratteri): ");
-    USERNAME = obtainStr(USERNAME);
+    UserName = obtainStr(UserName);
     printf("\n");
 
-    if (fillPack(pack,mkUser_p,0,NULL,USERNAME, NULL) == -1){ //id sara' dato dal server
+    if (fillPack(pack,mkUser_p,0,NULL,UserName, NULL) == -1){ //id sara' dato dal server
         return -1;
     }
     if (writePack(ds_sock, pack) == -1){
@@ -322,12 +329,12 @@ int  createUser(int ds_sock, mail *pack){
 
     switch (pack->md.type){
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\nID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
+            printf("Creazione effettuata\nUserID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
 
-            ID = malloc(24);
-            strcpy(ID,pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
+            UserID = malloc(24);
+            strcpy(UserID,pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
 
-            printf("### ID = %s ###\n",ID);
+            printf("### UserID = %s ###\n",UserID);
             int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
             return id;
             break;
@@ -346,13 +353,13 @@ int  createUser(int ds_sock, mail *pack){
     return 0;
 }
 
-int createRoom(int ds_sock, mail *pack, table *tabChats){
+int createChat(int ds_sock, mail *pack, table *tabChats){
     printf("Creazione nuova chat; scegliere il nome:\n");
 
     char *buff;
     buff = obtainStr(buff);
     // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
-    fillPack(pack,mkRoom_p,strlen(buff)+1,buff,USERNAME,ID);
+    fillPack(pack,mkRoom_p,strlen(buff)+1,buff,UserName,UserID);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
@@ -386,12 +393,12 @@ int createRoom(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
-int joinRoom(int ds_sock, mail *pack, int numEntry){
+int openChat(int ds_sock, mail *pack, int numEntry){
     char *buff[sizeof(pack->md.whoOrWhy)]; //sempre capire se limitiamo il nome chat a 24 caratteri
 
     sprintf(buff,"%d",numEntry);
 
-    fillPack(pack,joinRm_p,strlen(buff)+1,buff,USERNAME,ID);
+    fillPack(pack,openRm_p,strlen(buff)+1,buff,UserName,UserID);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;

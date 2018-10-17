@@ -9,9 +9,12 @@
 #include "include/mexData.h"
 #include "globalSet.h"
 
-int PID;
 
-int UserID; // ID restituito al termine della creazione utente
+
+int PID; // processID per lo stop del main thread
+
+char* UserID; // UserID restituito al termine della creazione utente
+char* UserName;
 
 int clientDemo(int argc, char *argv[]) {
 
@@ -22,7 +25,7 @@ int clientDemo(int argc, char *argv[]) {
     if (initClient(con) == -1) {
         exit(-1);
     }
-    printf("Collegamento al server effettuato. Scegliere 'login' o 'creaUser'\n");
+    printf("Connection with server done. Please choose 'login' or 'register'\n>>> ");
     mail *pack = malloc(sizeof(mail));
 
     retry:
@@ -35,8 +38,8 @@ int clientDemo(int argc, char *argv[]) {
             return -1;
         }
     } else if (strcmp(buff, "creaUser") == 0) {
-        UserID = createUser(con->ds_sock, pack);
-        if ( UserID == -1) {
+        int usid = createUser(con->ds_sock, pack);
+        if ( usid == -1) {
             return -1;
         }
     } else {
@@ -44,8 +47,12 @@ int clientDemo(int argc, char *argv[]) {
         goto retry;
     }
 
-    //buff = obtainStr(buff);
-    if (StartClientStorage("ChatList") == -1){ //poi usare il buff per renderlo adattabile
+    printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
+
+
+
+
+    if (StartClientStorage("ChatList") == -1){
         return -1; // GESTIONE USCITA
     }
     FILE *temp = fopen(chatTable, "w+");
@@ -62,39 +69,43 @@ int clientDemo(int argc, char *argv[]) {
         return -1;
     }
 
-    createdChat: // label che permette di re-listare tutte le chat (compresa quella appena aggiunta)
+    crChat: // label che permette di re-listare tutte le chat
 
     printf("\nWelcome, you can talk over following chat:\n");
     tabPrint(tabChats);
 
-    printf("\nPlease choose one: (otherwise write 'newChat')\n");
+    printf("\nPlease choose one: (otherwise write 'createChat', 'deleteChat', 'openChat' or 'joinChat')\n>>> ");
+
     // salvataggio tabella ricevuta ed apertura
     buff = obtainStr(buff);
 
-    if(strcmp(buff,"newChat") == 0){ //todo: andare su terminalshell.c e copiare lo strtok
-        if(createRoom(con->ds_sock, pack,tabChats) == -1){
+    if(strcmp(buff,"createChat") == 0){ //todo: andare su terminalshell.c e copiare lo strtok
+        if(createChat(con->ds_sock, pack, tabChats) == -1) {
             printf("Creation failed.\n");
-            return -1; //potrebbe essere utile lato utente tornare alla selezione chat
+            return -1;
+            goto crChat; ///UNA VOLTA CREATA ===> jOINIAMO DIRETTAMENTE
         }
-        else {
-            //aggiungere la nuova chat nella tabella, per poi re-listarle
-            goto createdChat;
-        }
+        else goto joChat;
     }
-    else{
+    else if(strcmp(buff,"openChat") == 0){
         int numEntry = searchFirstEntry(tabChats,buff);//gestire meglio il cerca per non compiere azioni ridondanti
 
         if( numEntry == -1){
             printf("Chat not exists, please choose one of the following, or create one.\n");
-            goto createdChat;
-        }
+            goto crChat;
+        }       /// UNA VOLTA APERTA ====> JOINIAMO DIRETTAMENTE
         else{
-            if(joinRoom(con->ds_sock, pack, numEntry) == -1){
+            if(openChat(con->ds_sock, pack, numEntry) == -1){
                 printf("Unable to join the chat. Returning to chat selection...\n");
             }
         }
     }
+    else if(strcmp(buff,"joinChat") == 0){
 
+    }
+
+
+    joChat:
 
     PID = getpid();
 
@@ -107,7 +118,7 @@ int clientDemo(int argc, char *argv[]) {
     raise(SIGSTOP); //discutere se puo' essere una soluzione
     //pause();
 
-    goto createdChat;
+    goto crChat;
 
     return 0;
 }
@@ -121,6 +132,8 @@ void *thUserRX(connection *con) {
         }
         printPack(packReceive);
     } while (packReceive->md.type != exitRm_p);
+
+    free(packReceive->mex);
     free(packReceive);
     pthread_exit(NULL);
 }
@@ -131,27 +144,15 @@ void* thUserTX(connection *con){
     char *buff;
 
     do {
-        printf("Inserire un messaggio: ");
+        printf("Inserire un messaggio:\n>>> ");
         buff = obtainStr(buff);
 
-        fillPack(packSend, mess_p, strlen(buff)+1, buff, "UTENTE", "ID"); //Utente e ID sono valori ottenuti dopo login
+        fillPack(packSend, mess_p, strlen(buff)+1, buff, UserName, UserID); //Utente e UserID sono valori ottenuti dopo login
 
         if(writePack(con->ds_sock, packSend) == -1){
             pthread_exit(NULL);
         }
         printPack(packSend);
-
-        /*
-
-        // inizio parte per il testing mono-thread
-
-        printf("\n\nRitorno\n");
-
-        if(readPack(con->ds_sock, packSend) ==-1){
-            pthread_exit(NULL);
-        }
-        printPack(packSend);
-        */
 
     } while (strcmp(packSend->mex, "quit") != 0);
     free(packSend->mex);

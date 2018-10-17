@@ -28,9 +28,9 @@
 /* TIPI DI PACCHETTO*/
 
 enum typePack {
-    mess_p, login_p, logout_p, test_p, success_p,
-    failed_p, mkUser_p, dataUs_p, mkRoom_p, dataRm_p,
-    joinRm_p, exitRm_p
+    success_p, failed_p, mess_p, test_p,               /** SYSTEM **/
+    login_p, logout_p, delUs_p, mkUser_p, dataUs_p,    /** USER**/
+    mkRoom_p, joinRm_p, openRm_p, dataRm_p, exitRm_p   /** ROOM**/
 };
 
 typedef struct metadata_{
@@ -77,8 +77,8 @@ char *obtainStr(char *);
 
 int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
-int createRoom(int ds_sock, mail *pack, table *tabChats);
-int joinRoom(int ds_sock, mail *pack, int numEntry);
+int createChat(int ds_sock, mail *pack, table *tabChats);
+int openChat(int ds_sock, mail *pack, int numEntry);
 
 void* thUserRX(connection *con);
 void* thUserTX(connection *con);
