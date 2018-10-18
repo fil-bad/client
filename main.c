@@ -32,6 +32,8 @@ int clientDemo(int argc, char *argv[]) {
     printf("Connection with server done. Please choose 'login' or 'register'\n>>> ");
     mail *pack = malloc(sizeof(mail));
 
+    //PARTE LOGIN O CREATE
+
     retry:
 
     buff = obtainStr(buff);
@@ -41,7 +43,7 @@ int clientDemo(int argc, char *argv[]) {
             perror("Login failed; cause:");
             return -1;
         }
-    } else if (strcmp(buff, "creaUser") == 0) {
+    } else if (strcmp(buff, "register") == 0) {
         int usid = createUser(con->ds_sock, pack);
         if ( usid == -1) {
             return -1;
@@ -53,19 +55,8 @@ int clientDemo(int argc, char *argv[]) {
 
     //printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
 
-    if (StartClientStorage("ChatList") == -1){
-        return -1; // GESTIONE USCITA
-    }
-    FILE *temp = fopen(chatTable, "w+");
-    if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
-        printf("Error writing file\n");
-        return -1;
-    }
-    fclose(temp);
-    //printf("file scritto.\n");
-    table *tabChats = open_Tab(chatTable);
-    //printf("opentab fatto.\n");
-    if (tabChats == NULL){
+    table *tabChats;
+    if (initClientTable(tabChats,pack) == NULL){
         printf("Errore apertura Tabella Chat.\n");
         return -1;
     }

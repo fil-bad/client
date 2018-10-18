@@ -4,6 +4,7 @@
 
 #include "../include/client.h"
 #include "../include/tableFile.h"
+#include "../include/fileSystemUtylity.h"
 
 extern char *UserName;
 extern char* UserID;
@@ -101,7 +102,7 @@ int readPack(int ds_sock, mail *pack) //todo: implementare controllo sulle read
         }
         if (ret == 0) {
             iterContr++;
-            if (iterContr > 10) {
+            if (iterContr > 5) {
                 dprintf(STDERR_FILENO, "Seems Read can't go further; test connection...\n");
                 if (testConnection(ds_sock) == -1) {
                     return -1;
@@ -190,6 +191,7 @@ int testConnection(int ds_sock)
     if (writePack(ds_sock, &packTest) == -1) {
         return -1;
     }
+    printf("testpack Riuscito\n");
     return 0;
 }
 
@@ -224,25 +226,8 @@ void printPack(mail *pack)
     printf("------[][]IL MESSAGGIO[][]------\n");
     printf("TEXT :\n--> %p\n\n",pack->mex); //non sempre stringa
 }
-///Server FUNCTION
 
-int initServer(connection *c, int coda)
-{
-    if(bind(c->ds_sock, (struct sockaddr *) &c->sock, sizeof(c->sock)))
-    {
-        perror("Bind failed, cause:");
-        return -1;
-    }
-    if(listen(c->ds_sock, coda)){
-        perror("Listen failed, cause:");
-        return -1;
-    }
-    return 0;
-}
-
-
-
-///Client FUNCTION
+///         ### Client FUNCTION ###
 
 int initClient(connection *c)
 {
@@ -268,14 +253,14 @@ int loginUserSide(int ds_sock, mail *pack){
     rescue: //risolvere consistenza stringhe
 
     printf("Fase di Login; inserire Username ed UserID\n");
-    printf("USER (max 23 caratteri): >>>");
+    printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
     if(strlen(UserName) >= 25){
         printf("You've inserted more character than allowed; retry.\n");
         goto rescue;
     }
 
-    printf("\nUserID univoco: ");
+    printf("\nUserID univoco >>> ");
     UserID = obtainStr(UserID);
     printf("\n");
 
@@ -313,7 +298,7 @@ int loginUserSide(int ds_sock, mail *pack){
 int createUser(int ds_sock, mail *pack){
 
     printf("Creazione Utente; inserire nuovo Username\n");
-    printf("USER (max 24 caratteri): ");
+    printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
     printf("\n");
 
@@ -352,6 +337,23 @@ int createUser(int ds_sock, mail *pack){
             break;
     }
     return 0;
+}
+
+table *initClientTable(table *tabChats, mail *pack){
+
+    if (StartClientStorage("ChatList") == -1){
+        return NULL;
+    }
+    FILE *temp = fopen(chatTable, "w+");
+
+    if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
+        printf("Error writing file\n");
+        return NULL;
+    }
+    fclose(temp);
+
+    tabChats = open_Tab(chatTable);
+    return tabChats;
 }
 
 int createChat(int ds_sock, mail *pack, table *tabChats){
@@ -438,12 +440,11 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
 }
 
 int joinChat(int ds_sock, mail *pack, table *tabChats){
-    printf("Join nuova chat; scrivere <ID>:<ChatName>\n");
+    printf("Join nuova chat; scrivere ID.\n<ID>: ");
 
     char *buff;
     buff = obtainStr(buff);
-    // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
-    fillPack(pack, joinRm_p, strlen(buff)+1, buff, UserName, UserID);
+    fillPack(pack, joinRm_p, 0, NULL, UserName, buff); //mando in WhoOrWhy perche' abbiamo 10^24 possibili diversi ID
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
