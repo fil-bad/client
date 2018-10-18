@@ -66,6 +66,10 @@ int clientDemo(int argc, char *argv[]) {
     printf("\nWelcome, you can talk over following chat:\n");
     tabPrint(tabChats);
 
+    printf("\n\n\n");
+
+    printChats(tabChats);
+
     printf("\nPlease choose one: (otherwise write 'createChat', 'deleteChat', 'openChat' or 'joinChat')\n>>> ");
 
     // salvataggio tabella ricevuta ed apertura
@@ -105,7 +109,7 @@ int clientDemo(int argc, char *argv[]) {
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
-    raise(SIGSTOP); //discutere se puo' essere una soluzione
+    raise(SIGSTOP); //discutere se possa essere una soluzione
     //pause();
 
     goto crChat;

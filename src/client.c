@@ -356,6 +356,14 @@ table *initClientTable(table *tabChats, mail *pack){
     return tabChats;
 }
 
+void printChats(table *tabChats){
+    printf("**********\n");
+    for (int i = 0; i < tabChats->head.len; i++) {
+        printf("%s\n",tabChats->data[i].name);
+    }
+    printf("**********\n");
+}
+
 int createChat(int ds_sock, mail *pack, table *tabChats){
     printf("Creazione nuova chat; scegliere il nome:\n");
 
@@ -376,7 +384,7 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
         case success_p:
             // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
-            addEntry(tabChats,pack->md.whoOrWhy,0); //todo: non so quale sia il valore data (deve dirlo il server)
+            addEntry(tabChats,pack->md.whoOrWhy,0);
             return 0;
             break;
 
@@ -457,7 +465,8 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case dataRm_p:
             printf("Join effettuato\n");
-            addEntry(tabChats,pack->mex,0); //todo: non so quale sia il valore data (deve dirlo il server)
+            entry *newChat = (entry *)pack->mex;
+            addEntry(tabChats,newChat->name,newChat->point);
             return 0;
             break;
 

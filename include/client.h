@@ -79,6 +79,7 @@ int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
 
 table* initClientTable(table *tabChats, mail *pack);
+void printChats(table* tabChats);
 
 int createChat(int ds_sock, mail *pack, table *tabChats);
 int openChat(int ds_sock, mail *pack, table *tabChats);
@@ -88,16 +89,6 @@ void* thUserRX(connection *con);
 void* thUserTX(connection *con);
 
 #endif //CLIENT_CLIENT_H
-
-/* todo: creazione di due thread, uno che stara' in invio dati dal client, (threadFromClient)
- *       e l'altro che stara' in ricezione dati verso il client; (threadToClient)
- *       ognuno di essi processa i pacchetti che arrivano (o delega il lavoro a un terzo thread)
- *       il ToC parte dopo il FromC (che si occupa della fase di login inizialmente);
- *       vediamo se possiamo far spawnare un thread ad un altro thread, altrimenti usiamo un semaforo;
- */
-
-
-
 
 /// ### DOCUMENTAZIONE ### ///
 
