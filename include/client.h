@@ -28,9 +28,9 @@
 /* TIPI DI PACCHETTO*/
 
 enum typePack {
-    success_p, failed_p, mess_p, test_p,               /** SYSTEM **/
+    success_p = 0, failed_p, mess_p, test_p,               /** SYSTEM **/
     login_p, logout_p, delUs_p, mkUser_p, dataUs_p,    /** USER**/
-    mkRoom_p, joinRm_p, openRm_p, dataRm_p, exitRm_p   /** ROOM**/
+    mkRoom_p, joinRm_p, openRm_p, dataRm_p, leaveRm_p, delRm_p, exitRm_p   /** ROOM**/
 };
 
 typedef struct metadata_{
@@ -82,6 +82,7 @@ table* initClientTable(table *tabChats, mail *pack);
 void printChats(table* tabChats);
 
 int createChat(int ds_sock, mail *pack, table *tabChats);
+int deleteChat(int ds_sock, mail *pack, table *tabChats);
 int openChat(int ds_sock, mail *pack, table *tabChats);
 int joinChat(int ds_sock, mail *pack, table *tabChats);
 

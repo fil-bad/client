@@ -52,25 +52,23 @@ int clientDemo(int argc, char *argv[]) {
         printf("Caso non supportato; riprovare\n");
         goto retry;
     }
-
     //printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
 
-    table *tabChats;
-    if (initClientTable(tabChats,pack) == NULL){
+    table *tabChats = initClientTable(tabChats,pack) ;
+    if (tabChats == NULL){
         printf("Errore apertura Tabella Chat.\n");
         return -1;
     }
 
-    crChat: // label che permette di re-listare tutte le chat
+    showChat: // label che permette di re-listare tutte le chat
 
-    printf("\nWelcome, you can talk over following chat:\n");
-    tabPrint(tabChats);
-
-    printf("\n\n\n");
+    printf("\nWelcome, you can talk over following chat:\n",tabChats);
+    //tabPrint(tabChats);
+    //printf("\n\n\n");
 
     printChats(tabChats);
 
-    printf("\nPlease choose one: (otherwise write 'createChat', 'deleteChat', 'openChat' or 'joinChat')\n>>> ");
+    printf("\nPlease choose one command:\n\n\t'createChat'\t'deleteChat'\t'openChat'\n\t'joinChat'\n\n>>> ");
 
     // salvataggio tabella ricevuta ed apertura
     buff = obtainStr(buff);
@@ -79,25 +77,32 @@ int clientDemo(int argc, char *argv[]) {
         if(createChat(con->ds_sock, pack, tabChats) == -1) {
             printf("Creation failed.\n");
             return -1;
-            goto crChat; ///UNA VOLTA CREATA ===> jOINIAMO DIRETTAMENTE
+            goto showChat; ///UNA VOLTA CREATA ===> jOINIAMO DIRETTAMENTE
         }
-        goto joChat;
+        goto showChat;
+        //goto joChat;
+    }
+    else if(strcmp(buff,"deleteChat") == 0){
+        if (deleteChat(con->ds_sock,pack, tabChats) == -1){
+            printf("Unable to delete the chat. Returning to chat selection...\n");
+            goto showChat;
+        }
     }
     else if(strcmp(buff,"openChat") == 0){
         //gestire meglio il cerca per non compiere azioni ridondanti
         if(openChat(con->ds_sock, pack, tabChats) == -1){
             printf("Unable to open the chat. Returning to chat selection...\n");
-            goto crChat;
+            goto showChat;
         }
         goto joChat; /// UNA VOLTA APERTA ====> JOINIAMO DIRETTAMENTE
     }
     else if(strcmp(buff,"joinChat") == 0){
         if (joinChat(con->ds_sock,pack, tabChats) == -1){
             printf("Unable to join the chat. Returning to chat selection...\n");
-            goto crChat;
+            goto showChat;
         }
     }
-
+    else goto showChat; // DA AFFINARE CON L'HELP
 
     joChat:
 
@@ -112,7 +117,7 @@ int clientDemo(int argc, char *argv[]) {
     raise(SIGSTOP); //discutere se possa essere una soluzione
     //pause();
 
-    goto crChat;
+    goto showChat;
 
     return 0;
 }
