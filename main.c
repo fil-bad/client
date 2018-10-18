@@ -18,8 +18,6 @@ char* UserName; //Username retituito allo stesso punto
 
 int currChat; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
 
-
-
 int clientDemo(int argc, char *argv[]) {
 
     char *buff;
@@ -68,7 +66,8 @@ int clientDemo(int argc, char *argv[]) {
 
     printChats(tabChats);
 
-    printf("\nPlease choose one command:\n\n\t'createChat'\t'deleteChat'\t'openChat'\n\t'joinChat'\n\n>>> ");
+    printf("\nPlease choose one command: (otherwise help() will be shown)\n\n");
+    printf("\t'createChat'\t'deleteChat'\t'leaveChat'\n\t'openChat'\t'joinChat'\n\n>>> ");
 
     // salvataggio tabella ricevuta ed apertura
     buff = obtainStr(buff);
@@ -102,8 +101,11 @@ int clientDemo(int argc, char *argv[]) {
             goto showChat;
         }
     }
-    else goto showChat; // DA AFFINARE CON L'HELP
+    else {
 
+        helpChat();
+        goto showChat; // DA AFFINARE CON L'HELP
+    }
     joChat:
 
     PID = getpid();
@@ -114,7 +116,7 @@ int clientDemo(int argc, char *argv[]) {
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
-    raise(SIGSTOP); //discutere se possa essere una soluzione
+    raise(SIGSTOP); //discutere se possa essere una soluzione (SEMBREREBBE NO)
     //pause();
 
     goto showChat;

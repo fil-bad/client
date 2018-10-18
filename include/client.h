@@ -71,6 +71,9 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
 void printPack(mail *pack);
 
 ///Client FUNCTION
+
+
+
 int initClient(connection *c);
 
 char *obtainStr(char *);
@@ -85,6 +88,8 @@ int createChat(int ds_sock, mail *pack, table *tabChats);
 int deleteChat(int ds_sock, mail *pack, table *tabChats);
 int openChat(int ds_sock, mail *pack, table *tabChats);
 int joinChat(int ds_sock, mail *pack, table *tabChats);
+
+void helpChat(void);
 
 void* thUserRX(connection *con);
 void* thUserTX(connection *con);

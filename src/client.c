@@ -521,3 +521,7 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
     }
     return 0;
 }
+
+void helpChat(void){
+
+}
