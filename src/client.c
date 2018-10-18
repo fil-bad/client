@@ -31,7 +31,8 @@ connection* initSocket(u_int16_t port, char* IP)
     return con;
 }
 
-int keepAlive(int *ds_sock){
+int keepAlive(int *ds_sock)
+{
     /// KEEPALIVE FUNCTION: vedere header per breve documentazione
     int optval;
     socklen_t optlen;
@@ -79,41 +80,9 @@ int keepAlive(int *ds_sock){
     return 0;
 }
 
-int writePack(int ds_sock, mail *pack) //dentro il thArg deve essere puntato un mail
+void freeConnection(connection* con)
 {
-    /// la funzione si aspetta che il buffer non sia modificato durante l'invio
-    ssize_t bWrite = 0;
-    ssize_t ret = 0;
-
-    do {
-        ret = send(ds_sock, pack + bWrite, sizeof(metadata) - bWrite, MSG_NOSIGNAL);
-        if (ret == -1) {
-            if (errno == EPIPE) {
-                dprintf(STDERR_FILENO, "write pack pipe break 1\n");
-                return -1;
-                //GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
-            }
-        }
-        bWrite += ret;
-
-    } while (sizeof(metadata) - bWrite != 0);
-
-    bWrite = 0;
-
-    do {
-        ret = send(ds_sock, pack->mex + bWrite, pack->md.dim - bWrite, MSG_NOSIGNAL);
-        if (ret == -1) {
-            if (errno == EPIPE) {
-                dprintf(STDERR_FILENO, "write pack pipe break 2\n");
-                return -1;
-                //GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
-            }
-        }
-        bWrite += ret;
-
-    } while (pack->md.dim - bWrite != 0);
-
-    return 0;
+    free(con);
 }
 
 int readPack(int ds_sock, mail *pack) //todo: implementare controllo sulle read
@@ -175,7 +144,45 @@ int readPack(int ds_sock, mail *pack) //todo: implementare controllo sulle read
     return 0;
 }
 
-int testConnection(int ds_sock) {
+int writePack(int ds_sock, mail *pack) //dentro il thArg deve essere puntato un mail
+{
+    /// la funzione si aspetta che il buffer non sia modificato durante l'invio
+    ssize_t bWrite = 0;
+    ssize_t ret = 0;
+
+    do {
+        ret = send(ds_sock, pack + bWrite, sizeof(metadata) - bWrite, MSG_NOSIGNAL);
+        if (ret == -1) {
+            if (errno == EPIPE) {
+                dprintf(STDERR_FILENO, "write pack pipe break 1\n");
+                return -1;
+                //GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
+            }
+        }
+        bWrite += ret;
+
+    } while (sizeof(metadata) - bWrite != 0);
+
+    bWrite = 0;
+
+    do {
+        ret = send(ds_sock, pack->mex + bWrite, pack->md.dim - bWrite, MSG_NOSIGNAL);
+        if (ret == -1) {
+            if (errno == EPIPE) {
+                dprintf(STDERR_FILENO, "write pack pipe break 2\n");
+                return -1;
+                //GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
+            }
+        }
+        bWrite += ret;
+
+    } while (pack->md.dim - bWrite != 0);
+
+    return 0;
+}
+
+int testConnection(int ds_sock)
+{
 
     mail packTest;
     fillPack(&packTest,test_p, 0, NULL, "SERVER", "testing_code");
@@ -185,12 +192,6 @@ int testConnection(int ds_sock) {
     }
     return 0;
 }
-
-void freeConnection(connection* con){
-    free(con);
-}
-
-
 
 int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOrWhy) {
     if (pack == NULL) {
@@ -309,7 +310,7 @@ int loginUserSide(int ds_sock, mail *pack){
     return 0;
 }
 
-int  createUser(int ds_sock, mail *pack){
+int createUser(int ds_sock, mail *pack){
 
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 24 caratteri): ");
@@ -388,15 +389,22 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
             return -1;
             break;
     }
-
-
     return 0;
 }
 
-int openChat(int ds_sock, mail *pack, int numEntry){
-    char *buff[sizeof(pack->md.whoOrWhy)]; //sempre capire se limitiamo il nome chat a 24 caratteri
+int openChat(int ds_sock, mail *pack, table *tabChats){
+    printf("Selezione chat esistente; scegliere il nome:\n");
 
-    sprintf(buff,"%d",numEntry);
+    char *buff;
+    buff = obtainStr(buff);
+
+    int numEntry = searchFirstEntry(tabChats,buff);
+    if( numEntry == -1){
+        printf("Chat not exists, please choose one of the following, or create one.\n");
+        return -1;
+    }
+
+    sprintf(buff,"%d",numEntry); // GESTIRE COSA MANDARE AL SERVER!!!
 
     fillPack(pack,openRm_p,strlen(buff)+1,buff,UserName,UserID);
 
@@ -411,7 +419,44 @@ int openChat(int ds_sock, mail *pack, int numEntry){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Join effettuato\n"); //o mex, a seconda della decisione sopra
+            printf("Open successful\n"); //o mex, a seconda della decisione sopra
+            return 0;
+            break;
+
+        case failed_p:
+            printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
+            errno = ENOMEM;
+            return -1;
+            break;
+        default:
+            printf("Unespected behaviour from server.\n");
+            errno = EINVAL;
+            return -1;
+            break;
+    }
+    return 0;
+}
+
+int joinChat(int ds_sock, mail *pack, table *tabChats){
+    printf("Join nuova chat; scrivere <ID>:<ChatName>\n");
+
+    char *buff;
+    buff = obtainStr(buff);
+    // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
+    fillPack(pack, joinRm_p, strlen(buff)+1, buff, UserName, UserID);
+
+    if (writePack(ds_sock, pack) == -1){
+        return -1;
+    }
+    //Pacchetto mandato, in attesa di risposta server
+    if (readPack(ds_sock,pack) == -1){
+        return -1;
+    }
+
+    switch (pack->md.type){
+        case dataRm_p:
+            printf("Join effettuato\n");
+            addEntry(tabChats,pack->mex,0); //todo: non so quale sia il valore data (deve dirlo il server)
             return 0;
             break;
 
@@ -426,6 +471,5 @@ int openChat(int ds_sock, mail *pack, int numEntry){
             return -1;
             break;
     }
-
     return 0;
 }

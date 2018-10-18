@@ -14,7 +14,11 @@
 int PID; // processID per lo stop del main thread
 
 char* UserID; // UserID restituito al termine della creazione utente
-char* UserName;
+char* UserName; //Username retituito allo stesso punto
+
+int currChat; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
+
+
 
 int clientDemo(int argc, char *argv[]) {
 
@@ -47,10 +51,7 @@ int clientDemo(int argc, char *argv[]) {
         goto retry;
     }
 
-    printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
-
-
-
+    //printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
 
     if (StartClientStorage("ChatList") == -1){
         return -1; // GESTIONE USCITA
@@ -85,23 +86,21 @@ int clientDemo(int argc, char *argv[]) {
             return -1;
             goto crChat; ///UNA VOLTA CREATA ===> jOINIAMO DIRETTAMENTE
         }
-        else goto joChat;
+        goto joChat;
     }
     else if(strcmp(buff,"openChat") == 0){
-        int numEntry = searchFirstEntry(tabChats,buff);//gestire meglio il cerca per non compiere azioni ridondanti
-
-        if( numEntry == -1){
-            printf("Chat not exists, please choose one of the following, or create one.\n");
+        //gestire meglio il cerca per non compiere azioni ridondanti
+        if(openChat(con->ds_sock, pack, tabChats) == -1){
+            printf("Unable to open the chat. Returning to chat selection...\n");
             goto crChat;
-        }       /// UNA VOLTA APERTA ====> JOINIAMO DIRETTAMENTE
-        else{
-            if(openChat(con->ds_sock, pack, numEntry) == -1){
-                printf("Unable to join the chat. Returning to chat selection...\n");
-            }
         }
+        goto joChat; /// UNA VOLTA APERTA ====> JOINIAMO DIRETTAMENTE
     }
     else if(strcmp(buff,"joinChat") == 0){
-
+        if (joinChat(con->ds_sock,pack, tabChats) == -1){
+            printf("Unable to join the chat. Returning to chat selection...\n");
+            goto crChat;
+        }
     }
 
 

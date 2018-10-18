@@ -78,7 +78,8 @@ char *obtainStr(char *);
 int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
 int createChat(int ds_sock, mail *pack, table *tabChats);
-int openChat(int ds_sock, mail *pack, int numEntry);
+int openChat(int ds_sock, mail *pack, table *tabChats);
+int joinChat(int ds_sock, mail *pack, table *tabChats);
 
 void* thUserRX(connection *con);
 void* thUserTX(connection *con);
