@@ -440,6 +440,44 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
+int leaveChat(int ds_sock, mail *pack, table *tabChats){
+    //possibile solo se l'utente e' ADMIN di tale chat
+
+    printf("Leaving chat; scegliere l'ID:\n");
+
+    char *buff;
+    buff = obtainStr(buff);
+    fillPack(pack,leaveRm_p,0,NULL,UserName, buff);
+
+    if (writePack(ds_sock, pack) == -1){
+        return -1;
+    }
+    if (readPack(ds_sock,pack) == -1){
+        return -1;
+    }
+
+    switch (pack->md.type){
+        case success_p:
+            // (anche vuota, dove scrivere le chat)
+            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            //delEntry(tabChats,)Entry(tabChats,pack->md.whoOrWhy,0); // CHIEDERE COME RICAVARE LA POSIZIONE
+            return 0;
+            break;
+
+        case failed_p:
+            printf("Creazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
+            errno = ENOMEM;
+            return -1;
+            break;
+        default:
+            printf("Unespected behaviour from server.\n");
+            errno = EINVAL;
+            return -1;
+            break;
+    }
+    return 0;
+}
+
 int openChat(int ds_sock, mail *pack, table *tabChats){
     printf("Selezione chat esistente; scegliere il nome:\n");
 

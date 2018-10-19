@@ -87,6 +87,12 @@ int clientDemo(int argc, char *argv[]) {
             goto showChat;
         }
     }
+    else if(strcmp(buff,"leaveChat") == 0){
+        if (leaveChat(con->ds_sock,pack, tabChats) == -1){
+            printf("Unable to delete the chat. Returning to chat selection...\n");
+            goto showChat;
+        }
+    }
     else if(strcmp(buff,"openChat") == 0){
         //gestire meglio il cerca per non compiere azioni ridondanti
         if(openChat(con->ds_sock, pack, tabChats) == -1){
@@ -116,8 +122,8 @@ int clientDemo(int argc, char *argv[]) {
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
-    raise(SIGSTOP); //discutere se possa essere una soluzione (SEMBREREBBE NO)
-    //pause();
+    //raise(SIGSTOP); //discutere se possa essere una soluzione (SEMBREREBBE NO)
+    pause();
 
     goto showChat;
 
@@ -155,7 +161,7 @@ void* thUserTX(connection *con){
         }
         printPack(packSend);
 
-    } while (strcmp(packSend->mex, "quit") != 0);
+    } while (packSend->md.type != exitRm_p);
     free(packSend->mex);
     free(packSend);
     close(con->ds_sock);
