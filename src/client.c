@@ -561,5 +561,9 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
 }
 
 void helpChat(void){
-
+    printf("\n\nCreateChat: crea un nuovo canale di conversazione.\n");
+    printf("DeleteChat: elimina un canale di conversazione (possibile solo se si e' admin dello stesso).\n");
+    printf("LeaveChat: lascia un canale di conversazione.\n");
+    printf("OpenChat: apre un canale esistente di conversazione.\n");
+    printf("JoinChat: partecipa a un nuovo canale di conversazione.\n");
 }
