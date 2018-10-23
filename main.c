@@ -18,6 +18,13 @@ char* UserName; //Username retituito allo stesso punto
 
 int currChat; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
 
+mail packReceive;
+mail packSend;
+pthread_t tidRX, tidTX;
+
+
+
+
 int clientDemo(int argc, char *argv[]) {
 
     char *buff;
@@ -116,14 +123,14 @@ int clientDemo(int argc, char *argv[]) {
 
     PID = getpid();
 
-    pthread_t tidRX, tidTX;
     pthread_create(&tidRX, NULL, thUserRX, con);
     pthread_create(&tidTX, NULL, thUserTX, con);
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
     //raise(SIGSTOP); //discutere se possa essere una soluzione (SEMBREREBBE NO)
-    pause();
+
+    pause(); // USARE I SEMAFORI, che sono signal free
 
     goto showChat;
 
@@ -132,41 +139,42 @@ int clientDemo(int argc, char *argv[]) {
 
 void *thUserRX(connection *con) {
 
-    mail *packReceive = malloc(sizeof(mail));
     do {
-        if(readPack(con->ds_sock, packReceive) == -1){
+        if(readPack(con->ds_sock, &packReceive) == -1){
             pthread_exit(NULL);
         }
-        printPack(packReceive);
-    } while (packReceive->md.type != exitRm_p);
+        printPack(&packReceive);
+    } while (packReceive.md.type != exitRm_p);
 
-    free(packReceive->mex);
-    free(packReceive);
+    free(packReceive.mex);
     pthread_exit(NULL);
 }
 
 
 void* thUserTX(connection *con){
-    mail *packSend = malloc(sizeof(mail));
     char *buff;
 
     do {
         printf("Inserire un messaggio:\n>>> ");
         buff = obtainStr(buff);
 
-        fillPack(packSend, mess_p, strlen(buff)+1, buff, UserName, UserID); //Utente e UserID sono valori ottenuti dopo login
+        fillPack(&packSend, mess_p, strlen(buff)+1, buff, UserName, UserID); //Utente e UserID sono valori ottenuti dopo login
 
-        if(writePack(con->ds_sock, packSend) == -1){
+        if(writePack(con->ds_sock, &packSend) == -1){
             pthread_exit(NULL);
         }
-        printPack(packSend);
+        printPack(&packSend);
 
-    } while (packSend->md.type != exitRm_p);
-    free(packSend->mex);
-    free(packSend);
+    } while (packSend.md.type != exitRm_p);
+    free(packSend.mex);
     close(con->ds_sock);
-    kill(PID,SIGCONT);
-    ///gestire il ritorno alla scelta della chat
+
+    pthread_kill(tidRX,SIGKILL);
+
+    free(packReceive.mex);
+
+
+
     pthread_exit(NULL);
 }
 
