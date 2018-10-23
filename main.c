@@ -81,7 +81,7 @@ int clientDemo(int argc, char *argv[]) {
         goto showChat;
         //goto joChat;
     }
-    else if(strcmp(buff,"deleteChat") == 0){
+    else if(strcmp(buff,"deleteChat") == 0){ //todo: implementare oltre al testo, anche dei numeri per chiamare le modalita'
         if (deleteChat(con->ds_sock,pack, tabChats) == -1){
             printf("Unable to delete the chat. Returning to chat selection...\n");
             goto showChat;

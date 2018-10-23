@@ -59,6 +59,8 @@ table *compressTable(table *table);
 
 int searchFirstEntry(table *tabel, char *search);
 
+int searchFirstIDKey(table *t, int ID);
+
 int searchEntryBy(table *tabel, char *search, int startIndex);
 
 
