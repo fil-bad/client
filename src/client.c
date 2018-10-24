@@ -248,6 +248,15 @@ char *obtainStr(char *buff){
     return buff;
 }
 
+char *fitInWoW(char *buff){
+
+    char buffTmp[24];
+    strncpy(buffTmp,buff,23);
+    buffTmp[23] = '\0';
+    return buffTmp;
+}
+
+
 int loginUserSide(int ds_sock, mail *pack){
 
     rescue: //risolvere consistenza stringhe
@@ -255,13 +264,11 @@ int loginUserSide(int ds_sock, mail *pack){
     printf("Fase di Login; inserire Username ed UserID\n");
     printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
-    if(strlen(UserName) >= 25){
-        printf("You've inserted more character than allowed; retry.\n");
-        goto rescue;
-    }
+    UserName = fitInWoW(UserName); // cosi' tagliamo la stringa senza problemi
 
     printf("\nUserID univoco >>> ");
     UserID = obtainStr(UserID);
+    UserID = fitInWoW(UserID);
     printf("\n");
 
     if (fillPack(pack,login_p,0,NULL,UserName, UserID) == -1){ //utente e id saranno passati da scanf
@@ -300,6 +307,7 @@ int createUser(int ds_sock, mail *pack){
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
+    UserName = fitInWoW(UserName);
     printf("\n");
 
     if (fillPack(pack,mkUser_p,0,NULL,UserName, NULL) == -1){ //id sara' dato dal server
@@ -409,7 +417,13 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 
     char *buff;
     buff = obtainStr(buff);
+    buff = fitInWoW(buff); // accorciato a max 24 byte
+
     int indexEntry = searchFirstIDKey(tabChats, atoi(buff));
+    if (indexEntry == -1){
+        printf("ID not found.\n");
+        return -1;
+    }
 
     char newBuff[24];
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
@@ -425,7 +439,7 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
             delEntry(tabChats, indexEntry);
             return 0;
             break;
@@ -451,7 +465,13 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
 
     char *buff;
     buff = obtainStr(buff);
+    buff = fitInWoW(buff); // accorciato a max 24 byte
+
     int indexEntry = searchFirstIDKey(tabChats, atoi(buff));
+    if (indexEntry == -1){
+        printf("ID not found.\n");
+        return -1;
+    }
 
     char newBuff[24];
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
@@ -468,7 +488,7 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Leave riuscito\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            printf("Leave riuscito\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
             delEntry(tabChats,indexEntry);
             return 0;
             break;
@@ -537,7 +557,15 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
 
     char *buff;
     buff = obtainStr(buff);
-    fillPack(pack, joinRm_p, 0, NULL, UserName, buff); //mando in WhoOrWhy perche' abbiamo 10^24 possibili diversi ID
+    buff = fitInWoW(buff);
+
+    int numEntry = searchFirstEntry(tabChats,buff);
+    if( numEntry != -1){
+        printf("Chat < %s > already exists, please use 'openChat'/'4' + 'chatName'.\n", buff);
+        return -1;
+    }
+
+    fillPack(pack, joinRm_p, 0, NULL, UserName, buff);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;

@@ -77,6 +77,7 @@ void printPack(mail *pack);
 int initClient(connection *c);
 
 char *obtainStr(char *);
+char *fitInWoW(char *);
 
 int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
