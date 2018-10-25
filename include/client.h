@@ -25,6 +25,7 @@
 
 #define fflush(stdin) while(getchar() != '\n')
 
+
 /* TIPI DI PACCHETTO*/
 
 enum typePack {
@@ -32,6 +33,9 @@ enum typePack {
     login_p, logout_p, delUs_p, mkUser_p, dataUs_p,    /** USER**/
     mkRoom_p, joinRm_p, openRm_p, dataRm_p, leaveRm_p, delRm_p, exitRm_p   /** ROOM**/
 };
+
+
+
 
 typedef struct metadata_{
     size_t dim;

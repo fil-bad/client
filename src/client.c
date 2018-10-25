@@ -208,10 +208,16 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
     else pack->mex = mex;
 
     if (sender == NULL)strncpy(pack->md.sender, "", 28);
-    else strncpy(pack->md.sender, sender, 28);
+    else {
+        strncpy(pack->md.sender, sender, 27);
+        pack->md.sender[27] = '\0'; // sono sicuro che possa venir letto come una stringa
+    }
 
     if (whoOrWhy == NULL)strncpy(pack->md.whoOrWhy, "", 24);
-    else strncpy(pack->md.whoOrWhy, whoOrWhy, 24);
+    else{
+        strncpy(pack->md.whoOrWhy, whoOrWhy, 23);
+        pack->md.whoOrWhy[23] = '\0'; // sono sicuro che possa venir letto come una stringa
+    }
 
     return 0;
 }
@@ -248,15 +254,6 @@ char *obtainStr(char *buff){
     return buff;
 }
 
-char *fitInWoW(char *buff){
-
-    char buffTmp[24];
-    strncpy(buffTmp,buff,23);
-    buffTmp[23] = '\0';
-    return buffTmp;
-}
-
-
 int loginUserSide(int ds_sock, mail *pack){
 
     rescue: //risolvere consistenza stringhe
@@ -264,11 +261,9 @@ int loginUserSide(int ds_sock, mail *pack){
     printf("Fase di Login; inserire Username ed UserID\n");
     printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
-    UserName = fitInWoW(UserName); // cosi' tagliamo la stringa senza problemi
 
     printf("\nUserID univoco >>> ");
     UserID = obtainStr(UserID);
-    UserID = fitInWoW(UserID);
     printf("\n");
 
     if (fillPack(pack,login_p,0,NULL,UserName, UserID) == -1){ //utente e id saranno passati da scanf
@@ -307,7 +302,6 @@ int createUser(int ds_sock, mail *pack){
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
-    UserName = fitInWoW(UserName);
     printf("\n");
 
     if (fillPack(pack,mkUser_p,0,NULL,UserName, NULL) == -1){ //id sara' dato dal server
@@ -373,7 +367,7 @@ void printChats(table *tabChats){
 }
 
 int createChat(int ds_sock, mail *pack, table *tabChats){
-    printf("Creazione nuova chat; scegliere il nome:\n");
+    printf("Creazione nuova chat; scegliere il nome (max 23 caratteri):\n");
 
     char *buff;
     buff = obtainStr(buff);
@@ -417,15 +411,14 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 
     char *buff;
     buff = obtainStr(buff);
-    buff = fitInWoW(buff); // accorciato a max 24 byte
 
-    int indexEntry = searchFirstIDKey(tabChats, atoi(buff));
+    int indexEntry = searchFirstIDKey(tabChats, (int)strtol(buff, NULL, 10));
     if (indexEntry == -1){
         printf("ID not found.\n");
         return -1;
     }
 
-    char newBuff[24];
+    char newBuff[24]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
     fillPack(pack,delRm_p,0,NULL,UserName, newBuff);
 
@@ -459,15 +452,14 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 }
 
 int leaveChat(int ds_sock, mail *pack, table *tabChats){
-    //possibile solo se l'utente e' ADMIN di tale chat
+    //possibile per qualunque utente; se era l'ultimo della chat,
 
     printf("Leaving chat; scegliere l'ID:\n");
 
     char *buff;
     buff = obtainStr(buff);
-    buff = fitInWoW(buff); // accorciato a max 24 byte
 
-    int indexEntry = searchFirstIDKey(tabChats, atoi(buff));
+    int indexEntry = searchFirstIDKey(tabChats, (int)strtol(buff, NULL, 10));
     if (indexEntry == -1){
         printf("ID not found.\n");
         return -1;
@@ -557,7 +549,6 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
 
     char *buff;
     buff = obtainStr(buff);
-    buff = fitInWoW(buff);
 
     int numEntry = searchFirstEntry(tabChats,buff);
     if( numEntry != -1){
