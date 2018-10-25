@@ -115,6 +115,7 @@ int clientDemo(int argc, char *argv[]) {
 
     goto showChat;
 
+    close(con->ds_sock);
     return 0;
 }
 
