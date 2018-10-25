@@ -81,13 +81,14 @@ void printPack(mail *pack);
 int initClient(connection *c);
 
 char *obtainStr(char *);
-char *fitInWoW(char *);
 
 int loginUserSide(int ds_sock, mail *pack);
 int createUser(int ds_sock,mail *pack);
 
 table* initClientTable(table *tabChats, mail *pack);
 void printChats(table* tabChats);
+
+int chooseAction(char *command, connection *con, mail *pack, table *tabChats);
 
 int createChat(int ds_sock, mail *pack, table *tabChats);
 int deleteChat(int ds_sock, mail *pack, table *tabChats);

@@ -366,6 +366,55 @@ void printChats(table *tabChats){
     printf("**********\n");
 }
 
+/* #### SCELTA AZIONI ####*/
+
+int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
+
+    int value = -1;
+
+    if(strcmp(command,"createChat") == 0 || strtol(command,NULL,10) == 1){
+        value = createChat(con->ds_sock, pack, tabChats);
+        if(value == -1) {
+            printf("Creation failed.\n");
+            return -1;
+        }
+    }
+    else if(strcmp(command,"deleteChat") == 0 || strtol(command,NULL,10) == 2){
+        if (deleteChat(con->ds_sock,pack, tabChats) == -1){
+            printf("Unable to delete the chat. Returning to chat selection...\n");
+            return -1;
+        }
+    }
+    else if(strcmp(command,"leaveChat") == 0 || strtol(command,NULL,10) == 3){
+        if (leaveChat(con->ds_sock,pack, tabChats) == -1){
+            printf("Unable to delete the chat. Returning to chat selection...\n");
+            return -1;
+        }
+    }
+    else if(strcmp(command,"openChat") == 0 || strtol(command,NULL,10) == 4){
+        value = openChat(con->ds_sock, pack, tabChats);
+        if (value == -1){
+            printf("Unable to open the chat. Returning to chat selection...\n");
+            return -1;
+        }
+    }
+    else if(strcmp(command,"joinChat") == 0 || strtol(command,NULL,10) == 5){
+        value = joinChat(con->ds_sock,pack, tabChats);
+        if (value == -1){
+            printf("Unable to join the chat. Returning to chat selection...\n");
+            return -1;
+        }
+    }
+    else {
+        helpChat();
+        return -1;
+    }
+    return value;
+}
+
+
+/* ##### AZIONI DELLE SCELTE SELEZIONATE ##### */
+
 int createChat(int ds_sock, mail *pack, table *tabChats){
     printf("Creazione nuova chat; scegliere il nome (max 23 caratteri):\n");
 
@@ -385,9 +434,9 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy); //o mex, a seconda della decisione sopra
+            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
             addEntry(tabChats,pack->md.whoOrWhy,0);
-            return 0;
+            return searchFirstEntry(tabChats,pack->md.whoOrWhy);
             break;
 
         case failed_p:
@@ -526,7 +575,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case success_p:
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n"); //o mex, a seconda della decisione sopra
-            return 0;
+            return numEntry;
             break;
 
         case failed_p:
@@ -570,7 +619,7 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
             printf("Join effettuato\n");
             entry *newChat = (entry *)pack->mex;
             addEntry(tabChats,newChat->name,newChat->point);
-            return 0;
+            return searchFirstEntry(tabChats,newChat->name);
             break;
 
         case failed_p:

@@ -16,7 +16,7 @@ int PID; // processID per lo stop del main thread
 char* UserID; // UserID restituito al termine della creazione utente
 char* UserName; //Username retituito allo stesso punto
 
-int currChat; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
+int ChatID; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
 
 mail packReceive;
 mail packSend;
@@ -65,9 +65,11 @@ int clientDemo(int argc, char *argv[]) {
         return -1;
     }
 
+    printf("\nWelcome. ");
+
     showChat: // label che permette di re-listare tutte le chat
 
-    printf("\nWelcome, you can talk over following chat:\n",tabChats);
+    printf("You can talk over following chat:\n");
     //tabPrint(tabChats);
     //printf("\n\n\n");
 
@@ -76,49 +78,12 @@ int clientDemo(int argc, char *argv[]) {
     printf("\nPlease choose one command or the relative number: (otherwise help() will be shown)\n\n");
     printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t'joinChat'/'5'\n\n>>> ");
 
-    // salvataggio tabella ricevuta ed apertura
     buff = obtainStr(buff);
 
-    if(strcmp(buff,"createChat") == 0 || strtol(buff,NULL,10) == 1){ //todo: andare su terminalshell.c e copiare lo strtok
-        if(createChat(con->ds_sock, pack, tabChats) == -1) {
-            printf("Creation failed.\n");
-            return -1;
-            goto showChat; ///UNA VOLTA CREATA ===> JOINIAMO DIRETTAMENTE
-        }
-        goto showChat;
-        //goto joChat;
-    }
-    else if(strcmp(buff,"deleteChat") == 0 || strtol(buff,NULL,10) == 2){
-        if (deleteChat(con->ds_sock,pack, tabChats) == -1){
-            printf("Unable to delete the chat. Returning to chat selection...\n");
-            goto showChat;
-        }
-    }
-    else if(strcmp(buff,"leaveChat") == 0 || strtol(buff,NULL,10) == 3){
-        if (leaveChat(con->ds_sock,pack, tabChats) == -1){
-            printf("Unable to delete the chat. Returning to chat selection...\n");
-            goto showChat;
-        }
-    }
-    else if(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4){
-        //gestire meglio il cerca per non compiere azioni ridondanti
-        if(openChat(con->ds_sock, pack, tabChats) == -1){
-            printf("Unable to open the chat. Returning to chat selection...\n");
-            goto showChat;
-        }
-        goto joChat; /// UNA VOLTA APERTA ====> JOINIAMO DIRETTAMENTE
-    }
-    else if(strcmp(buff,"joinChat") == 0 || strtol(buff,NULL,10) == 5){
-        if (joinChat(con->ds_sock,pack, tabChats) == -1){
-            printf("Unable to join the chat. Returning to chat selection...\n");
-            goto showChat;
-        }
-    }
-    else {
-        helpChat();
+    ChatID = chooseAction(buff, con, pack, tabChats);
+    if(ChatID == -1){
         goto showChat;
     }
-    joChat:
 
     PID = getpid();
 
