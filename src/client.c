@@ -510,7 +510,6 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         printf("Chat not exists, please choose one of the following, or create one.\n");
         return -1;
     }
-
     sprintf(buff,"%d",numEntry); // GESTIRE COSA MANDARE AL SERVER!!!
 
     fillPack(pack,openRm_p,strlen(buff)+1,buff,UserName,UserID);
