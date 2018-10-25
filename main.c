@@ -43,21 +43,23 @@ int clientDemo(int argc, char *argv[]) {
     if (initClient(con) == -1) {
         exit(-1);
     }
-    printf("Connection with server done. Please choose 'login' or 'register'\n>>> ");
+    printf("Connection with server done. ");
     mail *pack = malloc(sizeof(mail));
 
     //PARTE LOGIN O CREATE
 
     retry:
 
+    printf("Please choose 'login'/'1' or 'register'/'2'\n>>> ");
+
     buff = obtainStr(buff);
 
-    if (strcmp(buff, "login") == 0) {
+    if (strcmp(buff, "login") == 0 || strtol(buff,NULL,10) == 1) {
         if (loginUserSide(con->ds_sock, pack) == -1) {
             perror("Login failed; cause:");
             return -1;
         }
-    } else if (strcmp(buff, "register") == 0) {
+    } else if (strcmp(buff, "register") == 0 || strtol(buff,NULL,10) == 2) {
         int usid = createUser(con->ds_sock, pack);
         if ( usid == -1) {
             return -1;
