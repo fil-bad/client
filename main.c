@@ -130,7 +130,7 @@ void *thUserRX(connection *con) {
 
     pthread_cancel(tidTX);
 
-    delEntry(tabChats, ChatID);
+    if(packReceive.md.type == delRm_p) delEntry(tabChats, ChatID);
 
     free(packReceive.mex);
     free(packSend.mex);
