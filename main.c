@@ -100,7 +100,7 @@ int clientDemo(int argc, char *argv[]) {
 
     PID = getpid();
 
-    printf("Benvenuto nella chat n.%d. Entro nella room...\n");
+    printf("Benvenuto nella chat n.%d. Entro nella room...\n", ChatID);
 
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
