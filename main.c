@@ -22,12 +22,21 @@ mail packReceive;
 mail packSend;
 pthread_t tidRX, tidTX;
 
+sem_t sem;
 
+int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
+
+void changerType(int sig){
+    TypeMex = exitRm_p;
+    printf("TypeMex changed; the next message will be the last.\n");
+}
 
 
 int clientDemo(int argc, char *argv[]) {
 
     char *buff;
+
+    sem_init(&sem,0,0); // inizializzamo il semaforo dei thread
 
     connection *con = initSocket((u_int16_t) strtol(argv[1], NULL, 10), argv[2]);
 
@@ -87,14 +96,20 @@ int clientDemo(int argc, char *argv[]) {
 
     PID = getpid();
 
+    printf("Benvenuto nella chat n.%d. Entro nella room...\n");
+
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidRX, NULL, thUserRX, con);
+
+    signal(SIGINT, changerType); //inizio a gestire i l'handler per
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidTX, NULL, thUserTX, con);
 
     //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
 
-    //raise(SIGSTOP); //discutere se possa essere una soluzione (SEMBREREBBE NO)
-
-    pause(); // USARE I SEMAFORI, che sono signal free
+    sem_wait(&sem);
 
     goto showChat;
 
@@ -105,12 +120,18 @@ void *thUserRX(connection *con) {
 
     do {
         if(readPack(con->ds_sock, &packReceive) == -1){
-            pthread_exit(NULL);
+            break;
         }
         printPack(&packReceive);
     } while (packReceive.md.type != exitRm_p);
 
+    pthread_cancel(tidTX);
+
     free(packReceive.mex);
+    free(packSend.mex);
+
+    sem_post(&sem);
+
     pthread_exit(NULL);
 }
 
@@ -118,26 +139,27 @@ void *thUserRX(connection *con) {
 void* thUserTX(connection *con){
     char *buff;
 
+    TypeMex = mess_p;
+
     do {
         printf("Inserire un messaggio:\n>>> ");
         buff = obtainStr(buff);
 
-        fillPack(&packSend, mess_p, strlen(buff)+1, buff, UserName, UserID); //Utente e UserID sono valori ottenuti dopo login
+        fillPack(&packSend, TypeMex, strlen(buff)+1, buff, UserName, UserID); //Utente e UserID sono valori ottenuti dopo login
 
         if(writePack(con->ds_sock, &packSend) == -1){
-            pthread_exit(NULL);
+            break;
         }
         printPack(&packSend);
 
     } while (packSend.md.type != exitRm_p);
+
+    pthread_cancel(tidRX);
+
     free(packSend.mex);
-    close(con->ds_sock);
-
-    pthread_kill(tidRX,SIGKILL);
-
     free(packReceive.mex);
 
-
+    sem_post(&sem);
 
     pthread_exit(NULL);
 }
