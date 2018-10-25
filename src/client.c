@@ -254,7 +254,7 @@ char *obtainStr(char *buff){
     return buff;
 }
 
-int loginUserSide(int ds_sock, mail *pack){
+int loginUser(int ds_sock, mail *pack){
 
     rescue: //risolvere consistenza stringhe
 
@@ -297,7 +297,7 @@ int loginUserSide(int ds_sock, mail *pack){
     return 0;
 }
 
-int createUser(int ds_sock, mail *pack){
+int registerUser(int ds_sock, mail *pack){
 
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 23 caratteri) >>> ");
@@ -317,12 +317,10 @@ int createUser(int ds_sock, mail *pack){
 
     switch (pack->md.type){
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\nUserID = %s (chiave d'accesso per successivi login)\n",pack->md.whoOrWhy);
-
             UserID = malloc(24);
             strcpy(UserID,pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
 
-            printf("### UserID = %s ###\n",UserID);
+            printf("### UserID = %s ### (chiave d'accesso per successivi login)\n",UserID);
             int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
             return id;
             break;
@@ -581,6 +579,12 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case failed_p:
             printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
+            return -1;
+            break;
+
+        case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
+            printf("Open error. %s is a no-existing more chat. Deleting...\n", buff);
+            delEntry(tabChats,numEntry);
             return -1;
             break;
         default:

@@ -82,8 +82,8 @@ int initClient(connection *c);
 
 char *obtainStr(char *);
 
-int loginUserSide(int ds_sock, mail *pack);
-int createUser(int ds_sock,mail *pack);
+int loginUser(int ds_sock, mail *pack);
+int registerUser(int ds_sock, mail *pack);
 
 table* initClientTable(table *tabChats, mail *pack);
 void printChats(table* tabChats);

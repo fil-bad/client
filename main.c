@@ -18,6 +18,8 @@ char* UserName; //Username retituito allo stesso punto
 
 int ChatID; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
 
+table *tabChats; //tabella locale delle chat
+
 mail packReceive;
 mail packSend;
 pthread_t tidRX, tidTX;
@@ -55,12 +57,12 @@ int clientDemo(int argc, char *argv[]) {
     buff = obtainStr(buff);
 
     if (strcmp(buff, "login") == 0 || strtol(buff,NULL,10) == 1) {
-        if (loginUserSide(con->ds_sock, pack) == -1) {
+        if (loginUser(con->ds_sock, pack) == -1) {
             perror("Login failed; cause:");
             return -1;
         }
     } else if (strcmp(buff, "register") == 0 || strtol(buff,NULL,10) == 2) {
-        int usid = createUser(con->ds_sock, pack);
+        int usid = registerUser(con->ds_sock, pack);
         if ( usid == -1) {
             return -1;
         }
@@ -68,9 +70,9 @@ int clientDemo(int argc, char *argv[]) {
         printf("Caso non supportato; riprovare\n");
         goto retry;
     }
-    //printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
+    printf("<UserID>:<USER> = %s:%s\n", UserID,UserName);
 
-    table *tabChats = initClientTable(tabChats,pack) ;
+    tabChats = initClientTable(tabChats,pack) ;
     if (tabChats == NULL){
         printf("Errore apertura Tabella Chat.\n");
         return -1;
@@ -109,8 +111,6 @@ int clientDemo(int argc, char *argv[]) {
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidTX, NULL, thUserTX, con);
 
-    //todo: puo' essere utile attivare l'help da dentro la chat con ctrl+C
-
     sem_wait(&sem);
 
     goto showChat;
@@ -126,9 +126,11 @@ void *thUserRX(connection *con) {
             break;
         }
         printPack(&packReceive);
-    } while (packReceive.md.type != exitRm_p);
+    } while (packReceive.md.type != delRm_p);
 
     pthread_cancel(tidTX);
+
+    delEntry(tabChats, ChatID);
 
     free(packReceive.mex);
     free(packSend.mex);
@@ -141,6 +143,8 @@ void *thUserRX(connection *con) {
 
 void* thUserTX(connection *con){
     char *buff;
+    char WorW[24];
+    sprintf(WorW, "%d",ChatID); //Immettiamo il ChatID per comunicare al server a chi scriviamo
 
     TypeMex = mess_p;
 
@@ -148,7 +152,7 @@ void* thUserTX(connection *con){
         printf("Inserire un messaggio:\n>>> ");
         buff = obtainStr(buff);
 
-        fillPack(&packSend, TypeMex, strlen(buff)+1, buff, UserName, UserID); //Utente e UserID sono valori ottenuti dopo login
+        fillPack(&packSend, TypeMex, strlen(buff)+1, buff, UserID, WorW); //Utente e UserID sono valori ottenuti dopo login
 
         if(writePack(con->ds_sock, &packSend) == -1){
             break;
