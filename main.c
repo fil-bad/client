@@ -95,9 +95,17 @@ int clientDemo(int argc, char *argv[]) {
     buff = obtainStr(buff);
 
     ChatID = chooseAction(buff, con, pack, tabChats);
+
+    // Modalita' temporanea di test
+    if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4)){
+        goto showChat;
+    }
+
+    /* QUESTO LO METTEREMO SE VORREMO FARE IL JOIN/OPEN AUTOMATICO
     if(ChatID == -1){
         goto showChat;
     }
+    */
 
     PID = getpid();
 
