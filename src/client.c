@@ -632,7 +632,8 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
             printf("Join effettuato\n");
             entry *newChat = (entry *)pack->mex;
             addEntry(tabChats,newChat->name,newChat->point);
-            return searchFirstEntry(tabChats,newChat->name);
+            int search=searchFirstEntry(tabChats,newChat->name);
+            return atoi(tabChats->data[search].name);
             break;
 
         case failed_p:
