@@ -94,6 +94,7 @@ int clientDemo(int argc, char *argv[]) {
 
     buff = obtainStr(buff);
 
+
     ChatID = chooseAction(buff, con, pack, tabChats);
 
     // Modalita' temporanea di test
