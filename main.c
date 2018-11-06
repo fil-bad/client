@@ -160,6 +160,8 @@ void* thUserTX(connection *con){
         printf("\n>>> ");
         buff = obtainStr(buff);
 
+        if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
+
         fillPack(&packSend, TypeMex, strlen(buff)+1, buff, userBuff, WorW); //Utente e UserID sono valori ottenuti dopo login
 
         if(writePack(con->ds_sock, &packSend) == -1){
@@ -167,7 +169,7 @@ void* thUserTX(connection *con){
         }
         printPack(&packSend);
 
-    } while (packSend.md.type != exitRm_p || strcmp(buff, "$q") == 0);
+    } while (packSend.md.type != exitRm_p);
 
     pthread_cancel(tidRX);
 
