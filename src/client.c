@@ -279,7 +279,7 @@ int loginUser(int ds_sock, mail *pack){
 
     switch (pack->md.type){
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
-            printf("Login effettuato come %s\n",UserID);
+            printf("Login effettuato come %s, %s\n",UserID, UserName);
             return 0;
             break;
 
@@ -357,11 +357,11 @@ table *initClientTable(table *tabChats, mail *pack){
 }
 
 void printChats(table *tabChats){
-    printf("**********\n");
+    printf("\t**********\n");
     for (int i = 0; i < tabChats->head.len; i++) {
         printf("\t%s\n",tabChats->data[i].name);
     }
-    printf("**********\n");
+    printf("\t**********\n");
 }
 
 /* #### SCELTA AZIONI ####*/
@@ -439,7 +439,7 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
             // (anche vuota, dove scrivere le chat)
             printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
             addEntry(tabChats,pack->md.whoOrWhy,0);
-            return searchFirstEntry(tabChats,pack->md.whoOrWhy);
+            return searchFirstOccurrence(tabChats, pack->md.whoOrWhy);
             break;
 
         case failed_p:
@@ -464,7 +464,7 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
 
-    int indexEntry = searchFirstIDKey(tabChats, (int)strtol(buff, NULL, 10));
+    int indexEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
     if (indexEntry == -1){
         printf("ID not found.\n");
         return -1;
@@ -516,7 +516,7 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
 
-    int indexEntry = searchFirstIDKey(tabChats, (int)strtol(buff, NULL, 10));
+    int indexEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
     if (indexEntry == -1){
         printf("ID not found.\n");
         return -1;
@@ -566,7 +566,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
 
-    int numEntry = searchFirstEntry(tabChats,buff);
+    int numEntry = searchFirstOccurrence(tabChats, buff);
     if( numEntry == -1){
         printf("Chat not exists, please choose one of the following, or create one.\n");
         return -1;
@@ -616,7 +616,7 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
 
-    int numEntry = searchFirstEntry(tabChats,buff);
+    int numEntry = searchFirstOccurrenceKey(tabChats, atoi(buff));
     if( numEntry != -1){
         printf("Chat < %s > already exists, please use 'openChat'/'4' + 'chatName'.\n", buff);
         return -1;
@@ -637,7 +637,7 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
             printf("Join effettuato\n");
             entry *newChat = (entry *)pack->mex;
             addEntry(tabChats,newChat->name,newChat->point);
-            int search=searchFirstEntry(tabChats,newChat->name);
+            int search= searchFirstOccurrence(tabChats, newChat->name);
             return atoi(tabChats->data[search].name);
             break;
 

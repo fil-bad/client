@@ -131,7 +131,7 @@ table *compressTable(table *t) {
 	return t;
 }
 
-int searchFirstEntry(table *t, char *search) {
+int searchFirstOccurrence(table *t, char *search) {
 	for (int i = 0; i < t->head.len; i++) {
 		if (strcmp(t->data[i].name, search) == 0) {
 			return i;
@@ -140,7 +140,7 @@ int searchFirstEntry(table *t, char *search) {
 	return -1;
 }
 
-int searchFirstIDKey(table *t, int ID) {
+int searchFirstOccurrenceKey(table *t, int ID) {
 	for (int i = 0; i < t->head.len; i++) {
 		if (strtol(t->data[i].name, NULL, 10) == ID) {
 			return i;
@@ -149,7 +149,7 @@ int searchFirstIDKey(table *t, int ID) {
 	return -1;
 }
 
-int searchEntryBy(table *t, char *search, int idStart) {
+int searchOccurrenceBy(table *t, char *search, int idStart) {
 	for (int i = idStart; i < t->head.len; i++) {
 		if (strcmp(t->data[i].name, search) == 0) {
 			return i;
