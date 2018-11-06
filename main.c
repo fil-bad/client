@@ -93,8 +93,6 @@ int clientDemo(int argc, char *argv[]) {
     printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t'joinChat'/'5'\t'printTab'/'$p'\n\n>>> ");
 
     buff = obtainStr(buff);
-
-
     ChatID = chooseAction(buff, con, pack, tabChats);
 
     // Modalita' temporanea di test
