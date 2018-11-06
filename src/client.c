@@ -102,7 +102,7 @@ int readPack(int ds_sock, mail *pack) //todo: implementare controllo sulle read
         }
         if (ret == 0) {
             iterContr++;
-            if (iterContr > 5) {
+            if (iterContr > 2) {
                 dprintf(STDERR_FILENO, "Seems Read can't go further; test connection...\n");
                 if (testConnection(ds_sock) == -1) {
                     return -1;
@@ -132,7 +132,7 @@ int readPack(int ds_sock, mail *pack) //todo: implementare controllo sulle read
         }
         if (ret == 0) {
             iterContr++;
-            if (iterContr > 10) {
+            if (iterContr > 2) {
                 dprintf(STDERR_FILENO, "Seems Read can't go further; test connection...\n");
                 if (testConnection(ds_sock) == -1) {
                     return -1;
@@ -406,8 +406,6 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
 	    tabPrint(tabChats);
 	    printf("\n\n\n");
     }
-
-
     else {
         helpChat();
         return -1;
@@ -616,7 +614,7 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
 
-    int numEntry = searchFirstOccurrenceKey(tabChats, atoi(buff));
+    int numEntry = searchFirstOccurrenceKey(tabChats, (int)strtol(buff, NULL, 10));
     if( numEntry != -1){
         printf("Chat < %s > already exists, please use 'openChat'/'4' + 'chatName'.\n", buff);
         return -1;
@@ -638,7 +636,7 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
             entry *newChat = (entry *)pack->mex;
             addEntry(tabChats,newChat->name,newChat->point);
             int search= searchFirstOccurrence(tabChats, newChat->name);
-            return atoi(tabChats->data[search].name);
+            return (int) strtol(tabChats->data[search].name, NULL, 10);
             break;
 
         case failed_p:
