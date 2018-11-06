@@ -402,7 +402,12 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
             printf("Unable to join the chat. Returning to chat selection...\n");
             return -1;
         }
+    }else if(strcmp(command,"printTab") == 0 || strcmp(command,"$p") == 0){
+	    tabPrint(tabChats);
+	    printf("\n\n\n");
     }
+
+
     else {
         helpChat();
         return -1;

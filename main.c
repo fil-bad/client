@@ -84,13 +84,13 @@ int clientDemo(int argc, char *argv[]) {
     showChat: // label che permette di re-listare tutte le chat
 
     printf("You can talk over following chat:\n");
-    //tabPrint(tabChats);
-    //printf("\n\n\n");
+    tabPrint(tabChats);
+    printf("\n\n\n");
 
     printChats(tabChats);
 
     printf("\nPlease choose one command or the relative number: (otherwise help() will be shown)\n\n");
-    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t'joinChat'/'5'\n\n>>> ");
+    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t'joinChat'/'5'\t'printTab'/'$p'\n\n>>> ");
 
     buff = obtainStr(buff);
 
