@@ -57,11 +57,11 @@ int delEntry(table *table, int index);
 
 table *compressTable(table *table);
 
-int searchFirstEntry(table *tabel, char *search);
+int searchFirstOccurrence(table *tabel, char *search);
 
-int searchFirstIDKey(table *t, int ID);
+int searchFirstOccurrenceKey(table *t, int ID);
 
-int searchEntryBy(table *tabel, char *search, int startIndex);
+int searchOccurrenceBy(table *tabel, char *search, int startIndex);
 
 
 /// Funzioni di supporto operanti sul file
