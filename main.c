@@ -90,7 +90,7 @@ int clientDemo(int argc, char *argv[]) {
     printChats(tabChats);
 
     printf("\nPlease choose one command or the relative number: (otherwise help() will be shown)\n\n");
-    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t'joinChat'/'5'\n\n>>> ");
+    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t\t'joinChat'/'5'\n\n>>> ");
 
     buff = obtainStr(buff);
 

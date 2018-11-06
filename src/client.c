@@ -524,7 +524,7 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
 
 
-    fillPack(pack,leaveRm_p,0,NULL, userBuff, userBuff);
+    fillPack(pack,leaveRm_p,0,NULL, userBuff, newBuff);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
