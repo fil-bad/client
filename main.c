@@ -84,8 +84,8 @@ int clientDemo(int argc, char *argv[]) {
     showChat: // label che permette di re-listare tutte le chat
 
     printf("You can talk over following chat:\n");
-    tabPrint(tabChats);
-    printf("\n\n\n");
+    //tabPrint(tabChats);
+    //printf("\n\n\n");
 
     printChats(tabChats);
 

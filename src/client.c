@@ -529,7 +529,7 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
 
 
-    fillPack(pack,leaveRm_p,0,NULL, userBuff, userBuff);
+    fillPack(pack,leaveRm_p,0,NULL, userBuff, newBuff);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
@@ -541,7 +541,7 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Leave riuscito\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
+            printf("Leave riuscito\n");
             delEntry(tabChats,indexEntry);
             return 0;
             break;
