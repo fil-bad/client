@@ -207,13 +207,13 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
     if (dim == 0)pack->mex = NULL;
     else pack->mex = mex;
 
-    if (sender == NULL)strncpy(pack->md.sender, "", 28);
+    if (sender == NULL) strncpy(pack->md.sender, "", 28);
     else {
         strncpy(pack->md.sender, sender, 27);
         pack->md.sender[27] = '\0'; // sono sicuro che possa venir letto come una stringa
     }
 
-    if (whoOrWhy == NULL)strncpy(pack->md.whoOrWhy, "", 24);
+    if (whoOrWhy == NULL) strncpy(pack->md.whoOrWhy, "", 24);
     else{
         strncpy(pack->md.whoOrWhy, whoOrWhy, 23);
         pack->md.whoOrWhy[23] = '\0'; // sono sicuro che possa venir letto come una stringa
@@ -419,7 +419,7 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
     // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
-    fillPack(pack,mkRoom_p,strlen(buff)+1,buff,UserName,UserID);
+    fillPack(pack,mkRoom_p,strlen(buff)+1,buff,UserName,UserID); //todo: vedere schema leaveChat
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
@@ -467,7 +467,12 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 
     char newBuff[24]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
-    fillPack(pack,delRm_p,0,NULL,UserName, newBuff);
+
+    char userBuff[28];
+    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+
+
+    fillPack(pack,delRm_p,0,NULL, userBuff, newBuff);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
@@ -515,7 +520,11 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     char newBuff[24];
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
 
-    fillPack(pack,leaveRm_p,0,NULL,UserName, newBuff);
+    char userBuff[28];
+    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+
+
+    fillPack(pack,leaveRm_p,0,NULL, userBuff, userBuff);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;

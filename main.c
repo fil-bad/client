@@ -29,8 +29,9 @@ sem_t sem;
 int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
 
 void changerType(int sig){
+    printf("TypeMex precedente = %d\n",TypeMex);
     TypeMex = exitRm_p;
-    printf("TypeMex changed; the next message will be the last.\n");
+    printf("TypeMex changed to %d; the next message will be the last.\n", TypeMex);
 }
 
 
@@ -113,6 +114,8 @@ int clientDemo(int argc, char *argv[]) {
 
     sem_wait(&sem);
 
+    signal(SIGINT, SIG_DFL);
+
     goto showChat;
 
     close(con->ds_sock);
@@ -146,20 +149,25 @@ void* thUserTX(connection *con){
     char WorW[24];
     sprintf(WorW, "%d",ChatID); //Immettiamo il ChatID per comunicare al server a chi scriviamo
 
+    char userBuff[28];
+    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+
     TypeMex = mess_p;
 
+    printf("Inserire un messaggio ('$q' o CTRL+C per terminare):");
+
     do {
-        printf("Inserire un messaggio:\n>>> ");
+        printf("\n>>> ");
         buff = obtainStr(buff);
 
-        fillPack(&packSend, TypeMex, strlen(buff)+1, buff, UserID, WorW); //Utente e UserID sono valori ottenuti dopo login
+        fillPack(&packSend, TypeMex, strlen(buff)+1, buff, userBuff, WorW); //Utente e UserID sono valori ottenuti dopo login
 
         if(writePack(con->ds_sock, &packSend) == -1){
             break;
         }
         printPack(&packSend);
 
-    } while (packSend.md.type != exitRm_p);
+    } while (packSend.md.type != exitRm_p || strcmp(buff, "$q") == 0);
 
     pthread_cancel(tidRX);
 
