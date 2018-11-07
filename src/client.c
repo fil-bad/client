@@ -487,16 +487,24 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
     switch (pack->md.type){
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
+            printf("Eliminazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
             delEntry(tabChats, indexEntry);
             return 0;
             break;
 
+        case delRm_p:
+            printf("Eliminazione gia' effettuata da qualcuno.\nServer Report: %s\n", pack->md.whoOrWhy);
+            delEntry(tabChats, indexEntry);
+            errno = EINVAL;
+            return -2;
+            break;
+
         case failed_p:
-            printf("Creazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
+            printf("Eliminazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
             return -1;
             break;
+
         default:
             printf("Unespected behaviour from server.\n");
             errno = EINVAL;
@@ -542,6 +550,13 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
             printf("Leave riuscito\n");
             delEntry(tabChats,indexEntry);
             return 0;
+            break;
+
+        case delRm_p:
+            printf("Eliminazione gia' effettuata da qualcuno.\nServer Report: %s\n", pack->md.whoOrWhy);
+            delEntry(tabChats, indexEntry);
+            errno = EINVAL;
+            return -2;
             break;
 
         case failed_p:
