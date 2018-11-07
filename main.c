@@ -41,7 +41,7 @@ int clientDemo(int argc, char *argv[]) {
 
     sem_init(&sem,0,0); // inizializzamo il semaforo dei thread
 
-    connection *con = initSocket((u_int16_t) strtol(argv[1], NULL, 10), argv[2]);
+    connection *con = initSocket((u_int16_t) strtol(argv[2], NULL, 10), argv[1]);
 
     if (initClient(con) == -1) {
         exit(-1);
@@ -191,7 +191,7 @@ void* thUserTX(connection *con){
 void helpProject()
 {
     printf("I parametri Client sono:\n");
-    printf("[port] [IP]\tMi collego al server a porta e IP specificati (127.0.0.1 per test locale)\n");
+    printf("[IP] [port]\tMi collego al server a porta e IP specificati (127.0.0.1 per test locale)\n");
 }
 
 int main(int argc, char *argv[])
