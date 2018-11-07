@@ -40,7 +40,6 @@ void changerType(int sig){
     printf("TypeMex changed to %d; the next message will be the last.\n", TypeMex);
 }
 
-
 int clientDemo(int argc, char *argv[]) {
 
     char *buff;
