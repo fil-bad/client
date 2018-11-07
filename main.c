@@ -9,7 +9,7 @@
 #include "include/mexData.h"
 #include "globalSet.h"
 
-
+connection *con;
 
 int PID; // processID per lo stop del main thread
 
@@ -28,6 +28,12 @@ sem_t sem;
 
 int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
 
+
+void closeHandler(int sig){
+    close(con->ds_sock);
+    exit(-1);
+}
+
 void changerType(int sig){
     printf("TypeMex precedente = %d\n",TypeMex);
     TypeMex = exitRm_p;
@@ -41,11 +47,13 @@ int clientDemo(int argc, char *argv[]) {
 
     sem_init(&sem,0,0); // inizializzamo il semaforo dei thread
 
-    connection *con = initSocket((u_int16_t) strtol(argv[2], NULL, 10), argv[1]);
+    con = initSocket((u_int16_t) strtol(argv[2], NULL, 10), argv[1]);
 
     if (initClient(con) == -1) {
         exit(-1);
     }
+    signal(SIGINT, closeHandler); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
+
     printf("Connection with server done. ");
     mail *pack = malloc(sizeof(mail));
 
@@ -83,6 +91,8 @@ int clientDemo(int argc, char *argv[]) {
 
     showChat: // label che permette di re-listare tutte le chat
 
+    signal(SIGINT, closeHandler); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
+
     printf("You can talk over following chat:\n");
     //tabPrint(tabChats);
     //printf("\n\n\n");
@@ -114,7 +124,9 @@ int clientDemo(int argc, char *argv[]) {
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidRX, NULL, thUserRX, con);
 
-    signal(SIGINT, changerType); //inizio a gestire i l'handler per
+    signal(SIGINT, SIG_DFL); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
+
+    signal(SIGINT, changerType); //inizio a gestire i l'handler per l'uscita di messaggio
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidTX, NULL, thUserTX, con);
