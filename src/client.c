@@ -389,20 +389,21 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
             return -1;
         }
     }
-    else if(strcmp(command,"openChat") == 0 || strtol(command,NULL,10) == 4){
+    else if(strcmp(command,"joinChat") == 0 || strtol(command,NULL,10) == 4) {
+        value = joinChat(con->ds_sock, pack, tabChats);
+        if (value == -1) {
+            printf("Unable to join the chat. Returning to chat selection...\n");
+            return -1;
+        }
+    }
+    else if(strcmp(command,"openChat") == 0 || strtol(command,NULL,10) == 5){
         value = openChat(con->ds_sock, pack, tabChats);
         if (value == -1){
             printf("Unable to open the chat. Returning to chat selection...\n");
             return -1;
         }
     }
-    else if(strcmp(command,"joinChat") == 0 || strtol(command,NULL,10) == 5){
-        value = joinChat(con->ds_sock,pack, tabChats);
-        if (value == -1){
-            printf("Unable to join the chat. Returning to chat selection...\n");
-            return -1;
-        }
-    }else if(strcmp(command,"printTab") == 0 || strcmp(command,"$p") == 0){
+    else if(strcmp(command,"printTab") == 0 || strcmp(command,"$p") == 0){
 	    tabPrint(tabChats);
 	    printf("\n\n\n");
     }

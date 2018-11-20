@@ -95,20 +95,22 @@ int clientDemo(int argc, char *argv[]) {
     printChats(tabChats);
 
     printf("\nPlease choose one command or the relative number: (otherwise help() will be shown)\n\n");
-    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n"
-           "\t'openChat'/'4'\t'joinChat'/'5'\t'printTab'/'$p'\n"
-           "\t'exitProgram'/'$e'\n\n>>> ");
+    printf("\t'1'/'createChat'\t'4'/'joinChat'\t\t'$p'/'printTab'\n"
+           "\t'2'/'deleteChat'\t'5'/'openChat'\t\t'$e'/'exitProgram'\n"
+           "\t'3'/'leaveChat'\t\t\n\n>>> ");
 
     buff = obtainStr(buff);
+
+    if ((strcmp(buff,"exitProgram") == 0 || (strcmp(buff,"$e") == 0)))
+    {
+        close(con->ds_sock);
+        return 0;
+    }
+
     ChatID = chooseAction(buff, con, pack, tabChats);
 
     if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4))
     {
-        if ((strcmp(buff,"exitProgram") == 0 || (strcmp(buff,"$e") == 0)))
-        {
-            close(con->ds_sock);
-            return 0;
-        }
         goto showChat;
     }
 
@@ -204,7 +206,7 @@ void* thUserTX(connection *con){
 void helpProject()
 {
     printf("I parametri Client sono:\n");
-    printf("[IP] [port]\tMi collego al server a porta e IP specificati (127.0.0.1 per test locale)\n");
+    printf("[IP] [port]\tMi collego al server a IP e porta specificati (IP = 127.0.0.1 in locale)\n");
 }
 
 int main(int argc, char *argv[])
