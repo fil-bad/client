@@ -11,8 +11,6 @@
 
 connection *con;
 
-int PID; // processID per lo stop del main thread
-
 char* UserID; // UserID restituito al termine della creazione utente
 char* UserName; //Username retituito allo stesso punto
 
@@ -43,8 +41,6 @@ void changerType(int sig){
 int clientDemo(int argc, char *argv[]) {
 
     char *buff;
-
-    sem_init(&sem,0,0); // inizializzamo il semaforo dei thread
 
     con = initSocket((u_int16_t) strtol(argv[2], NULL, 10), argv[1]);
 
@@ -117,16 +113,10 @@ int clientDemo(int argc, char *argv[]) {
         goto showChat;
     }
 
-    /* QUESTO LO METTEREMO SE VORREMO FARE IL JOIN/OPEN AUTOMATICO
-    if(ChatID == -1){
-        goto showChat;
-    }
-    */
-
-    PID = getpid();
-
     printf("Benvenuto nella chat n.%d. Entro nella room...\n", ChatID);
 
+    sem_init(&sem,0,0); // inizializzamo il semaforo dei thread a 0,
+                        // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidRX, NULL, thUserRX, con);
@@ -138,7 +128,16 @@ int clientDemo(int argc, char *argv[]) {
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidTX, NULL, thUserTX, con);
 
-    sem_wait(&sem);
+    sem_wait(&sem); // aspetto che uno dei due finisca la sua esecuzione
+
+    void *res1, *res2;
+
+    do { //devo ciclare perche' non e' detto che venga fatto subito
+        pthread_cancel(tidRX);
+        pthread_cancel(tidTX);
+        pthread_join(tidRX,&res1);
+        pthread_join(tidTX,&res2);
+    } while (res1 == PTHREAD_CANCELED || res2 == PTHREAD_CANCELED);
 
     signal(SIGINT, SIG_DFL);
 
@@ -157,8 +156,7 @@ void *thUserRX(connection *con) {
         printPack(&packReceive);
     } while (packReceive.md.type != delRm_p);
 
-    pthread_cancel(tidTX);
-
+    // pthread_cancel(tidTX);
     if(packReceive.md.type == delRm_p) delEntry(tabChats, ChatID);
 
     free(packReceive.mex);
@@ -166,7 +164,7 @@ void *thUserRX(connection *con) {
 
     sem_post(&sem);
 
-    pthread_exit(NULL);
+    pause();
 }
 
 
@@ -197,14 +195,14 @@ void* thUserTX(connection *con){
 
     } while (packSend.md.type != exitRm_p);
 
-    pthread_cancel(tidRX);
+    // pthread_cancel(tidRX);
 
     free(packSend.mex);
     free(packReceive.mex);
 
     sem_post(&sem);
 
-    pthread_exit(NULL);
+    pause();
 }
 
 void helpProject()
