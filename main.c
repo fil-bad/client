@@ -52,7 +52,7 @@ int clientDemo(int argc, char *argv[]) {
     printf("Connection with server done. ");
     mail *pack = malloc(sizeof(mail));
 
-    //PARTE LOGIN O CREATE
+    /** PARTE LOGIN O CREATE **/
 
     retry:
 
@@ -102,7 +102,6 @@ int clientDemo(int argc, char *argv[]) {
     buff = obtainStr(buff);
     ChatID = chooseAction(buff, con, pack, tabChats);
 
-    // Modalita' temporanea di test
     if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4))
     {
         if ((strcmp(buff,"exitProgram") == 0 || (strcmp(buff,"$e") == 0)))
@@ -132,7 +131,7 @@ int clientDemo(int argc, char *argv[]) {
 
     void *res1, *res2;
 
-    do { //devo ciclare perche' non e' detto che venga fatto subito
+    do { //devo ciclare perche' non e' detto che il CANCEL avvenga subito
         pthread_cancel(tidRX);
         pthread_cancel(tidTX);
         pthread_join(tidRX,&res1);
@@ -142,9 +141,6 @@ int clientDemo(int argc, char *argv[]) {
     signal(SIGINT, SIG_DFL);
 
     goto showChat;
-
-    close(con->ds_sock);
-    return 0;
 }
 
 void *thUserRX(connection *con) {

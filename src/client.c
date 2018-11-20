@@ -573,6 +573,51 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
+int joinChat(int ds_sock, mail *pack, table *tabChats){
+    printf("Join nuova chat; scrivere ID.\n<ID>: ");
+
+    char *buff;
+    buff = obtainStr(buff);
+
+    int numEntry = searchFirstOccurrenceKey(tabChats, (int)strtol(buff, NULL, 10));
+    if( numEntry != -1){
+        printf("Chat < %s > already exists, please use 'openChat'/'4' + 'chatName'.\n", buff);
+        return -1;
+    }
+
+    fillPack(pack, joinRm_p, 0, NULL, UserName, buff);
+
+    if (writePack(ds_sock, pack) == -1){
+        return -1;
+    }
+    //Pacchetto mandato, in attesa di risposta server
+    if (readPack(ds_sock,pack) == -1){
+        return -1;
+    }
+
+    switch (pack->md.type){
+        case dataRm_p:
+            printf("Join effettuato\n");
+            entry *newChat = (entry *)pack->mex;
+            addEntry(tabChats,newChat->name,newChat->point);
+            int search= searchFirstOccurrence(tabChats, newChat->name);
+            return (int) strtol(tabChats->data[search].name, NULL, 10);
+            break;
+
+        case failed_p:
+            printf("Join non effettuato\nServer Report: %s\n", pack->md.whoOrWhy);
+            errno = ENOMEM;
+            return -1;
+            break;
+        default:
+            printf("Unespected behaviour from server.\n");
+            errno = EINVAL;
+            return -1;
+            break;
+    }
+    return 0;
+}
+
 int openChat(int ds_sock, mail *pack, table *tabChats){
     printf("Selezione chat esistente; scegliere il nome:\n");
 
@@ -612,51 +657,6 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
             printf("Open error. %s is a no-existing more chat. Deleting...\n", buff);
             delEntry(tabChats,numEntry);
-            return -1;
-            break;
-        default:
-            printf("Unespected behaviour from server.\n");
-            errno = EINVAL;
-            return -1;
-            break;
-    }
-    return 0;
-}
-
-int joinChat(int ds_sock, mail *pack, table *tabChats){
-    printf("Join nuova chat; scrivere ID.\n<ID>: ");
-
-    char *buff;
-    buff = obtainStr(buff);
-
-    int numEntry = searchFirstOccurrenceKey(tabChats, (int)strtol(buff, NULL, 10));
-    if( numEntry != -1){
-        printf("Chat < %s > already exists, please use 'openChat'/'4' + 'chatName'.\n", buff);
-        return -1;
-    }
-
-    fillPack(pack, joinRm_p, 0, NULL, UserName, buff);
-
-    if (writePack(ds_sock, pack) == -1){
-        return -1;
-    }
-    //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock,pack) == -1){
-        return -1;
-    }
-
-    switch (pack->md.type){
-        case dataRm_p:
-            printf("Join effettuato\n");
-            entry *newChat = (entry *)pack->mex;
-            addEntry(tabChats,newChat->name,newChat->point);
-            int search= searchFirstOccurrence(tabChats, newChat->name);
-            return (int) strtol(tabChats->data[search].name, NULL, 10);
-            break;
-
-        case failed_p:
-            printf("Join non effettuato\nServer Report: %s\n", pack->md.whoOrWhy);
-            errno = ENOMEM;
             return -1;
             break;
         default:
