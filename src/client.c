@@ -515,8 +515,8 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 }
 
 int leaveChat(int ds_sock, mail *pack, table *tabChats){
-    //possibile per qualunque utente; se era l'ultimo della chat,
-
+    // possibile per qualunque utente; se era l'ultimo della chat,
+    // il server elimina tutta la persistenza della chat
     printf("Leaving chat; scegliere l'ID:\n");
 
     char *buff;

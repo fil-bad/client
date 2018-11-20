@@ -99,13 +99,21 @@ int clientDemo(int argc, char *argv[]) {
     printChats(tabChats);
 
     printf("\nPlease choose one command or the relative number: (otherwise help() will be shown)\n\n");
-    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n\t'openChat'/'4'\t'joinChat'/'5'\t'printTab'/'$p'\n\n>>> ");
+    printf("\t'createChat'/'1'\t'deleteChat'/'2'\t'leaveChat'/'3'\n"
+           "\t'openChat'/'4'\t'joinChat'/'5'\t'printTab'/'$p'\n"
+           "\t'exitProgram'/'$e'\n\n>>> ");
 
     buff = obtainStr(buff);
     ChatID = chooseAction(buff, con, pack, tabChats);
 
     // Modalita' temporanea di test
-    if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4)){
+    if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4))
+    {
+        if ((strcmp(buff,"exitProgram") == 0 || (strcmp(buff,"$e") == 0)))
+        {
+            close(con->ds_sock);
+            return 0;
+        }
         goto showChat;
     }
 
@@ -214,7 +222,7 @@ int main(int argc, char *argv[])
             return -1;
         }
     }
-    helpProject();
+    else helpProject();
 
     return 0;
 }
