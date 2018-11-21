@@ -18,11 +18,17 @@ int ChatID; // ID della chat nella quale scriveremo quando saremo nella fase di 
 
 table *tabChats; //tabella locale delle chat
 
+conversation *conv;
+
 mail packReceive;
 mail packSend;
 pthread_t tidRX, tidTX;
 
 sem_t sem;
+
+mex *messageTX;
+mex *messageRX;
+
 
 int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
 
@@ -32,10 +38,9 @@ void closeHandler(int sig){
     exit(-1);
 }
 
-void changerType(int sig){
-    printf("TypeMex precedente = %d\n",TypeMex);
+void changerType(int sig) {
     TypeMex = exitRm_p;
-    printf("TypeMex changed to %d; the next message will be the last.\n", TypeMex);
+    printf("TypeMex changed; press ENTER to quit from room\n");
 }
 
 int clientDemo(int argc, char *argv[]) {
@@ -114,7 +119,11 @@ int clientDemo(int argc, char *argv[]) {
         goto showChat;
     }
 
-    printf("Benvenuto nella chat n.%d. Entro nella room...\n", ChatID);
+    printf("Benvenuto nella chat n.%d.", ChatID);
+
+    conv = startConv(pack, conv); //scarichiamo tutta la conversazione in locale
+
+    printf("Entro nella room...\n");
 
     sem_init(&sem,0,0); // inizializzamo il semaforo dei thread a 0,
                         // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
@@ -152,6 +161,14 @@ void *thUserRX(connection *con) {
             break;
         }
         printPack(&packReceive);
+
+        /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
+        messageRX = makeMex(packReceive.mex, atoi(UserID));
+        if (addMex(conv, messageRX) == -1){
+            printf("Error writing mex on conv in RX.\n");
+            break;
+        }
+
     } while (packReceive.md.type != delRm_p);
 
     // pthread_cancel(tidTX);
@@ -180,16 +197,32 @@ void* thUserTX(connection *con){
 
     do {
         printf("\n>>> ");
-        buff = obtainStr(buff);
+        buff = obtainStr(buff); //messaggio da mandare
 
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
-
-        fillPack(&packSend, TypeMex, strlen(buff)+1, buff, userBuff, WorW); //Utente e UserID sono valori ottenuti dopo login
-
+        // nel caso volessimo uscire non mandiamo il messaggio attualmente in scrittura
+        if (TypeMex == exitRm_p) {
+            fillPack(&packSend, TypeMex, 0, NULL, userBuff, WorW);
+            free(buff);
+            break;
+        }
+        // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
+        else {
+            fillPack(&packSend, TypeMex, strlen(buff) + 1, buff, userBuff, WorW);
+            free(buff);
+        }
         if(writePack(con->ds_sock, &packSend) == -1){
             break;
         }
         printPack(&packSend);
+
+        /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
+        messageTX = makeMex(packReceive.mex, atoi(UserID));
+        if (addMex(conv, messageTX) == -1){
+            printf("Error writing mex on conv in TX.\n");
+            break;
+        }
+
 
     } while (packSend.md.type != exitRm_p);
 

@@ -364,6 +364,25 @@ void printChats(table *tabChats){
     printf("\t**********\n");
 }
 
+conversation* startConv(mail *pack, conversation *conv){
+    char *buff;
+    conv = openConf("ChatList/conversation");
+    memcpy(conv,pack->mex,pack->md.dim); //copiamo esattamente i byte che servono
+    printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
+
+    retry:
+    buff = obtainStr(buff);
+    if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
+    else if (strcmp(buff,"n") == 0);
+    else goto retry;
+
+    return conv;
+}
+
+
+
+
+
 /* #### SCELTA AZIONI ####*/
 
 int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
@@ -648,9 +667,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     }
 
     switch (pack->md.type){
-        case success_p:
+        case kConv_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Open successful\n"); //o mex, a seconda della decisione sopra
+            printf("Open successful\n");
             return numEntry;
             break;
 

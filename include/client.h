@@ -22,6 +22,7 @@
 #include <poll.h>
 #include <signal.h>
 #include "tableFile.h"
+#include "mexData.h"
 
 #define fflush(stdin) while(getchar() != '\n')
 
@@ -87,6 +88,8 @@ int registerUser(int ds_sock, mail *pack);
 
 table* initClientTable(table *tabChats, mail *pack);
 void printChats(table* tabChats);
+
+conversation* startConv(mail *pack, conversation *conv);
 
 int chooseAction(char *command, connection *con, mail *pack, table *tabChats);
 
