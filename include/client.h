@@ -29,15 +29,15 @@
 /* TIPI DI PACCHETTO*/
 
 enum typePack {
-    success_p = 0, failed_p, mess_p, test_p,               /** SYSTEM **/
-    login_p, logout_p, delUs_p, mkUser_p, dataUs_p,    /** USER**/
-    mkRoom_p, joinRm_p, openRm_p, dataRm_p, leaveRm_p, delRm_p, exitRm_p   /** ROOM**/
+    /** SYSTEM **/ success_p = 0, failed_p, mess_p, test_p,
+    /** USER**/    login_p, logout_p, delUs_p, mkUser_p, dataUs_p, kConv_p,
+    /** ROOM**/    mkRoom_p, joinRm_p, openRm_p, dataRm_p, leaveRm_p, delRm_p, exitRm_p
 };
 
-#define sendDim 28
-#define wowDim 24
+#define sendDim 40
+#define wowDim 44
 
-typedef struct metadata_{
+typedef struct metadata_{ //dim metadata = 96 byte
     size_t dim;
     int type; // dobbiamo definire dei tipi di comandi: es. 0 per il login => password in campo mex, ...
     char sender[sendDim];

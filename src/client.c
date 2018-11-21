@@ -637,7 +637,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     char userBuff[sendDim];
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
 
-    fillPack(pack,openRm_p,0,NULL,UserName,UserID);
+    fillPack(pack,openRm_p,0,NULL,userBuff,newBuff);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
