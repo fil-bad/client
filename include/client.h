@@ -34,14 +34,14 @@ enum typePack {
     mkRoom_p, joinRm_p, openRm_p, dataRm_p, leaveRm_p, delRm_p, exitRm_p   /** ROOM**/
 };
 
-
-
+#define sendDim 28
+#define wowDim 24
 
 typedef struct metadata_{
     size_t dim;
     int type; // dobbiamo definire dei tipi di comandi: es. 0 per il login => password in campo mex, ...
-    char sender[28];
-    char whoOrWhy[24];
+    char sender[sendDim];
+    char whoOrWhy[wowDim];
 }metadata;
 
 typedef struct mail_{
@@ -100,6 +100,7 @@ void helpChat(void);
 
 void* thUserRX(connection *con);
 void* thUserTX(connection *con);
+
 
 #endif //CLIENT_CLIENT_H
 

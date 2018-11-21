@@ -168,10 +168,10 @@ void *thUserRX(connection *con) {
 
 void* thUserTX(connection *con){
     char *buff;
-    char WorW[24];
+    char WorW[wowDim];
     sprintf(WorW, "%d",ChatID); //Immettiamo il ChatID per comunicare al server a chi scriviamo
 
-    char userBuff[28];
+    char userBuff[sendDim];
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
 
     TypeMex = mess_p;

@@ -207,16 +207,16 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
     if (dim == 0)pack->mex = NULL;
     else pack->mex = mex;
 
-    if (sender == NULL) strncpy(pack->md.sender, "", 28);
+    if (sender == NULL) strncpy(pack->md.sender, "", sendDim);
     else {
-        strncpy(pack->md.sender, sender, 27);
-        pack->md.sender[27] = '\0'; // sono sicuro che possa venir letto come una stringa
+        strncpy(pack->md.sender, sender, sendDim);
+        pack->md.sender[sendDim-1] = '\0'; // sono sicuro che possa venir letto come una stringa
     }
 
-    if (whoOrWhy == NULL) strncpy(pack->md.whoOrWhy, "", 24);
+    if (whoOrWhy == NULL) strncpy(pack->md.whoOrWhy, "", wowDim);
     else{
-        strncpy(pack->md.whoOrWhy, whoOrWhy, 23);
-        pack->md.whoOrWhy[23] = '\0'; // sono sicuro che possa venir letto come una stringa
+        strncpy(pack->md.whoOrWhy, whoOrWhy, wowDim);
+        pack->md.whoOrWhy[wowDim-1] = '\0'; // sono sicuro che possa venir letto come una stringa
     }
 
     return 0;
@@ -317,7 +317,7 @@ int registerUser(int ds_sock, mail *pack){
 
     switch (pack->md.type){
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
-            UserID = malloc(24);
+            UserID = malloc(wowDim);
             strcpy(UserID,pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
 
             printf("### UserID = %s ### (chiave d'accesso per successivi login)\n",UserID);
@@ -469,10 +469,10 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
         return -1;
     }
 
-    char newBuff[24]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
+    char newBuff[wowDim]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
 
-    char userBuff[28];
+    char userBuff[sendDim];
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
 
 
@@ -529,10 +529,10 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
         return -1;
     }
 
-    char newBuff[24];
+    char newBuff[wowDim];
     sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
 
-    char userBuff[28];
+    char userBuff[sendDim];
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
 
 
@@ -630,9 +630,14 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         printf("Chat not exists, please choose one of the following, or create one.\n");
         return -1;
     }
-    sprintf(buff,"%d",numEntry); // GESTIRE COSA MANDARE AL SERVER!!!
 
-    fillPack(pack,openRm_p,strlen(buff)+1,buff,UserName,UserID);
+    char newBuff[wowDim]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
+    sprintf(newBuff,"%s:%d",buff,numEntry); // idKey:EntryPosition
+
+    char userBuff[sendDim];
+    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+
+    fillPack(pack,openRm_p,0,NULL,UserName,UserID);
 
     if (writePack(ds_sock, pack) == -1){
         return -1;
