@@ -365,11 +365,25 @@ void printChats(table *tabChats){
 }
 
 conversation* startConv(mail *pack, conversation *conv){
-    char *buff;
-    conv = openConf("ChatList/conversation");
-    memcpy(conv,pack->mex,pack->md.dim); //copiamo esattamente i byte che servono
+
+    char dirName[64];
+    sprintf(dirName,"ConvList%s",pack->md.whoOrWhy);
+
+    if (StartClientStorage(dirName) == -1){
+        return NULL;
+    }
+    FILE *temp = fopen(chatConv, "w+");
+
+    if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
+        printf("Error writing file\n");
+        return NULL;
+    }
+    fclose(temp);
+
+    conv = openConf(dirName);
     printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
+    char *buff;
     retry:
     buff = obtainStr(buff);
     if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);

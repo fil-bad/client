@@ -122,6 +122,10 @@ int clientDemo(int argc, char *argv[]) {
     printf("Benvenuto nella chat n.%d.", ChatID);
 
     conv = startConv(pack, conv); //scarichiamo tutta la conversazione in locale
+    if (conv == NULL){
+        printf("Conv not initialized.\n");
+        return -1;
+    }
 
     printf("Entro nella room...\n");
 
@@ -163,7 +167,7 @@ void *thUserRX(connection *con) {
         printPack(&packReceive);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
-        messageRX = makeMex(packReceive.mex, atoi(UserID));
+        messageRX = makeMex(packReceive.mex, (int)strtol(UserID,NULL,10));
         if (addMex(conv, messageRX) == -1){
             printf("Error writing mex on conv in RX.\n");
             break;
@@ -217,7 +221,7 @@ void* thUserTX(connection *con){
         printPack(&packSend);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
-        messageTX = makeMex(packReceive.mex, atoi(UserID));
+        messageTX = makeMex(packReceive.mex, (int)strtol(UserID,NULL,10));
         if (addMex(conv, messageTX) == -1){
             printf("Error writing mex on conv in TX.\n");
             break;
@@ -253,5 +257,6 @@ int main(int argc, char *argv[])
     }
     else helpProject();
 
+    close(con->ds_sock); //chiusura finale di sicurezza
     return 0;
 }
