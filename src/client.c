@@ -666,7 +666,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     int i=0;
     mex *mexBuff[4096];
 
-    retry: // label per aggiungere i mess che sono arriati nel frattempo
+    retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 
     //Pacchetto mandato, in attesa di risposta server
     if (readPack(ds_sock,pack) == -1){
@@ -690,10 +690,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
             }
             fclose(temp);
 
-            i = 0;
-            while (mexBuff[i] != NULL){
-                free(mexBuff[i]);
-                i++;
+            while (i < 0){
+                freeMex(mexBuff[i]);
+                i--;
             }
             free(mexBuff);
             return numEntry;
@@ -702,10 +701,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case mess_p: //mi e' arrivato un mesaggio prima della conversazione
             mexBuff[i] = makeMexBuf(pack->md.dim,pack->mex);
             if (!mexBuff[i]){
-                i = 0;
-                while (mexBuff[i] != NULL){
-                    free(mexBuff[i]);
-                    i++;
+                while (i < 0){
+                    freeMex(mexBuff[i]);
+                    i--;
                 }
                 free(mexBuff);
             }
@@ -716,10 +714,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case failed_p:
             printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
-            i = 0;
-            while (mexBuff[i] != NULL){
-                free(mexBuff[i]);
-                i++;
+            while (i < 0){
+                freeMex(mexBuff[i]);
+                i--;
             }
             free(mexBuff);
             return -1;
@@ -728,9 +725,14 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
             printf("Open error. %s is a no-existing more chat. Deleting...\n", buff);
             delEntry(tabChats,numEntry);
+            while (i < 0){
+                freeMex(mexBuff[i]);
+                i--;
+            }
             free(mexBuff);
             return -1;
             break;
+
         default:
             printf("Unespected behaviour from server.\n");
             errno = EINVAL;
