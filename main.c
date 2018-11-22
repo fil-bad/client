@@ -116,7 +116,7 @@ int clientDemo(int argc, char *argv[]) {
 
     ChatID = chooseAction(buff, con, pack, tabChats);
 
-    if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 4))
+    if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 5))
     {
         goto showChat;
     }
