@@ -694,7 +694,6 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
                 freeMex(mexBuff[i]);
                 i--;
             }
-            free(mexBuff);
             return numEntry;
             break;
 
@@ -705,7 +704,6 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
                     freeMex(mexBuff[i]);
                     i--;
                 }
-                free(mexBuff);
             }
             i++;
             goto retry;
@@ -718,7 +716,6 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
                 freeMex(mexBuff[i]);
                 i--;
             }
-            free(mexBuff);
             return -1;
             break;
 
@@ -729,13 +726,16 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
                 freeMex(mexBuff[i]);
                 i--;
             }
-            free(mexBuff);
             return -1;
             break;
 
         default:
             printf("Unespected behaviour from server.\n");
             errno = EINVAL;
+            while (i < 0){
+                freeMex(mexBuff[i]);
+                i--;
+            }
             return -1;
             break;
     }
