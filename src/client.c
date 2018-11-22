@@ -8,6 +8,7 @@
 
 extern char *UserName;
 extern char* UserID;
+extern char dirName[64];
 
 /// GLOBAL FUNCTION
 connection* initSocket(u_int16_t port, char* IP)
@@ -366,20 +367,6 @@ void printChats(table *tabChats){
 
 conversation* startConv(mail *pack, conversation *conv){
 
-    char dirName[64];
-    sprintf(dirName,"ConvList%s",pack->md.whoOrWhy); // in WoW il nome della room
-
-    if (StartClientStorage(dirName) == -1){
-        return NULL;
-    }
-    FILE *temp = fopen(chatConv, "w+");
-
-    if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
-        printf("Error writing file\n");
-        return NULL;
-    }
-    fclose(temp);
-
     conv = openConf(dirName);
     printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
@@ -691,19 +678,46 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n");
 
-            // salvo su file sistem il pacchetto ricevuto
 
-            //uso saveNewMexF(...) per salvare ogni messaggio del buffer subito nel file sistem
+            sprintf(dirName,"ConvList%s",pack->md.whoOrWhy); // in WoW il nome della room
+
+            if (StartClientStorage(dirName) == -1){
+                return -1;
+            }
+            FILE *temp = fopen(chatConv, "w+");
+
+            if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
+                printf("Error writing file\n");
+                return -1;
+            }
+
+            i = 0;
+            while (mexBuff[i] != NULL){
+                saveNewMexF(mexBuff[i],temp);
+                i++;
+            }
+
+            fclose(temp);
 
 
+            i = 0;
+            while (mexBuff[i] != NULL){
+                free(mexBuff[i]);
+                i++;
+            }
+            free(mexBuff);
             return numEntry;
             break;
 
-        case mess_p:
+        case mess_p: //mi e' arrivato un mesaggio prima della conversazione
             mexBuff[i] = makeMexBuf(pack->md.dim,pack->mex);
-            if (!mexBuff[i])
-            {
-                // free di ogni elemento
+            if (!mexBuff[i]){
+                i = 0;
+                while (mexBuff[i] != NULL){
+                    free(mexBuff[i]);
+                    i++;
+                }
+                free(mexBuff);
             }
             i++;
             goto retry;
@@ -712,9 +726,12 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case failed_p:
             printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
-
+            i = 0;
+            while (mexBuff[i] != NULL){
+                free(mexBuff[i]);
+                i++;
+            }
             free(mexBuff);
-            //todo free di OGNI ELEMENTO
             return -1;
             break;
 

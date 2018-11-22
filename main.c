@@ -16,6 +16,8 @@ char* UserName; //Username retituito allo stesso punto
 
 int ChatID; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
 
+char dirName[64];
+
 table *tabChats; //tabella locale delle chat
 
 conversation *conv;
