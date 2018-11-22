@@ -60,7 +60,9 @@ int addMex(conversation *conversation, mex *message);
 
 mex *makeMex(char *text, int usId);
 
-int endConv(conversation *c);
+mex *makeMexBuf(size_t len, char *bufMex);
+
+int freeConv(conversation *c);
 
 
 ///Funzioni verso File

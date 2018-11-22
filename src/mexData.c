@@ -76,7 +76,25 @@ mex *makeMex(char *text, int usId) {
     return m;
 }
 
-int endConv(conversation *c) {
+mex *makeMexBuf(size_t len, char *bufMex) {
+    bufMex[len-1] = 0; //non dovrebbe essere necessario, per sicurezza
+    /// text su un buf temporaneo
+    mex *m = malloc(sizeof(mex));
+    if (m == NULL) {
+        return NULL;
+    }
+    m->text = malloc(len- sizeof(mexInfo));
+    if (!m->text)
+    {
+        free(m);
+        return NULL;
+    }
+    memcpy(&m->info,bufMex,sizeof(mexInfo));
+    strcpy(m->text, bufMex + sizeof(mexInfo));
+    return m;
+}
+
+int freeConv(conversation *c) {
 
     //libero tutti i messaggi
     for (int i = 0; i < c->head.nMex; i++) {

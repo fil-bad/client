@@ -367,7 +367,7 @@ void printChats(table *tabChats){
 conversation* startConv(mail *pack, conversation *conv){
 
     char dirName[64];
-    sprintf(dirName,"ConvList%s",pack->md.whoOrWhy);
+    sprintf(dirName,"ConvList%s",pack->md.whoOrWhy); // in WoW il nome della room
 
     if (StartClientStorage(dirName) == -1){
         return NULL;
@@ -675,6 +675,12 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     if (writePack(ds_sock, pack) == -1){
         return -1;
     }
+
+    int i=0;
+    mex *mexBuff[4096];
+
+    retry: // label per aggiungere i mess che sono arriati nel frattempo
+
     //Pacchetto mandato, in attesa di risposta server
     if (readPack(ds_sock,pack) == -1){
         return -1;
@@ -684,18 +690,38 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case kConv_p:
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n");
+
+            // salvo su file sistem il pacchetto ricevuto
+
+            //uso saveNewMexF(...) per salvare ogni messaggio del buffer subito nel file sistem
+
+
             return numEntry;
+            break;
+
+        case mess_p:
+            mexBuff[i] = makeMexBuf(pack->md.dim,pack->mex);
+            if (!mexBuff[i])
+            {
+                // free di ogni elemento
+            }
+            i++;
+            goto retry;
             break;
 
         case failed_p:
             printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
+
+            free(mexBuff);
+            //todo free di OGNI ELEMENTO
             return -1;
             break;
 
         case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
             printf("Open error. %s is a no-existing more chat. Deleting...\n", buff);
             delEntry(tabChats,numEntry);
+            free(mexBuff);
             return -1;
             break;
         default:
