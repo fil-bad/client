@@ -678,27 +678,17 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n");
 
-
             sprintf(dirName,"ConvList%s",pack->md.whoOrWhy); // in WoW il nome della room
 
             if (StartClientStorage(dirName) == -1){
                 return -1;
             }
             FILE *temp = fopen(chatConv, "w+");
-
             if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
                 printf("Error writing file\n");
                 return -1;
             }
-
-            i = 0;
-            while (mexBuff[i] != NULL){
-                saveNewMexF(mexBuff[i],temp);
-                i++;
-            }
-
             fclose(temp);
-
 
             i = 0;
             while (mexBuff[i] != NULL){
