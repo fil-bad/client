@@ -8,7 +8,7 @@
 
 extern char *UserName;
 extern char* UserID;
-extern char dirName[64];
+extern char convName[64];
 
 /// GLOBAL FUNCTION
 connection* initSocket(u_int16_t port, char* IP)
@@ -367,7 +367,7 @@ void printChats(table *tabChats){
 
 conversation* startConv(mail *pack, conversation *conv){
 
-    conv = openConf(dirName);
+    conv = openConf(convName);
     printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
     char *buff;
@@ -678,12 +678,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n");
 
-            sprintf(dirName,"ConvList%s",pack->md.whoOrWhy); // in WoW il nome della room
+            sprintf(convName,"convList%s",pack->md.whoOrWhy); // in WoW il nome della room
 
-            if (StartClientStorage(dirName) == -1){
-                return -1;
-            }
-            FILE *temp = fopen(chatConv, "w+");
+            FILE *temp = fopen(convName, "w+");
             if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
                 printf("Error writing file\n");
                 return -1;
@@ -697,7 +694,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
             return numEntry;
             break;
 
-        case mess_p: //mi e' arrivato un mesaggio prima della conversazione
+        case mess_p: //mi e' arrivato un messaggio prima della conversazione
             mexBuff[i] = makeMexBuf(pack->md.dim,pack->mex);
             if (!mexBuff[i]){
                 while (i < 0){
