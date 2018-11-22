@@ -431,6 +431,7 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
         helpChat();
         return -1;
     }
+    printf("Value = %d\n", value);
     return value;
 }
 
@@ -677,13 +678,16 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case kConv_p:
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n");
-
+            printPack(pack);
             sprintf(convName,"convList%s",pack->md.whoOrWhy); // in WoW il nome della room
 
-            FILE *temp = fopen(convName, "w+");
+            FILE *temp = fopen(convName, "w");
             if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
                 printf("Error writing file\n");
                 return -1;
+            }
+            for (int j = 0; j < i ; j++) {
+                saveNewMexF(mexBuff[j],temp);
             }
             fclose(temp);
 
@@ -691,7 +695,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
                 freeMex(mexBuff[i]);
                 i--;
             }
-            return numEntry;
+            return atoi(buff);
             break;
 
         case mess_p: //mi e' arrivato un messaggio prima della conversazione

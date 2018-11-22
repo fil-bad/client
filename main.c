@@ -121,7 +121,7 @@ int clientDemo(int argc, char *argv[]) {
         goto showChat;
     }
 
-    printf("Benvenuto nella chat n.%d.", ChatID);
+    printf("Benvenuto nella chat n.%d.\n", ChatID);
 
     conv = startConv(pack, conv); //scarichiamo tutta la conversazione in locale
     if (conv == NULL){
