@@ -645,7 +645,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     char *buff;
     buff = obtainStr(buff);
 
-    int numEntry = searchFirstOccurrence(tabChats, buff);
+    int numEntry = searchFirstOccurrenceKey(tabChats, atoi(buff));
     if( numEntry == -1){
         printf("Chat not exists, please choose one of the following, or create one.\n");
         return -1;
