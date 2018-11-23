@@ -76,7 +76,8 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
 void printPack(mail *pack);
 
 ///Client FUNCTION
-
+int readPack_inside(int fdPipe, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
+int writePack_inside(int fdPipe, mail *pack); // ma all'interno contengono la struct mail con i dati
 
 
 int initClient(connection *c);
@@ -101,8 +102,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats);
 
 void helpChat(void);
 
-void* thUserRX(connection *con);
-void* thUserTX(connection *con);
+void *thUserContr(connection *con);
+void* thUserRX(int *pipeRX);
+void* thUserTX(int *pipeInside);
 
 
 #endif //CLIENT_CLIENT_H

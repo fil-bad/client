@@ -87,7 +87,7 @@ void freeConnection(connection* con)
     free(con);
 }
 
-int readPack(int ds_sock, mail *pack) //todo: implementare controllo sulle read
+int readPack(int ds_sock, mail *pack)
 {
     int iterContr = 0; // vediamo se la read fallisce
 
@@ -183,13 +183,15 @@ int writePack(int ds_sock, mail *pack) //dentro il thArg deve essere puntato un 
     return 0;
 }
 
+
+
 int testConnection(int ds_sock)
 {
 
     mail packTest;
     fillPack(&packTest,test_p, 0, NULL, "SERVER", "testing_code");
 
-    if (writePack(ds_sock, &packTest) == -1) {
+    if (writePack_inside(ds_sock, &packTest) == -1) {
         return -1;
     }
     printf("testpack Riuscito\n");
@@ -236,6 +238,89 @@ void printPack(mail *pack)
 
 ///         ### Client FUNCTION ###
 
+int readPack_inside(int fdPipe, mail *pack) {
+    //rispetto alla versione normale ricevo il puntatore di mex, per cui prima è stato malloccato,e ora il ricevente lo freezerà
+
+    //se mex è presente DEVE essere Freezato fuori
+
+    int iterContr = 0; // vediamo se la read fallisce
+    ssize_t bRead = 0;
+    ssize_t ret = 0;
+    dprintf(fdDebug, "readPack Funx\n");
+
+    sigset_t newSet, oldSet;
+    sigfillset(&newSet);
+    pthread_sigmask(SIG_SETMASK, &newSet, &oldSet);
+
+    int iterazione = 0;
+    do {
+        dprintf(fdDebug, "readPack Funx [%d] e leggo dalla pipe %d\n", iterazione, fdPipe);
+        iterazione++;
+        ret = read(fdPipe, pack + bRead, sizeof(mail) - bRead);
+        if (ret == -1) {
+            perror("Read error; cause:");
+            return -1;
+        }
+        if (ret == 0) {
+            iterContr++;
+            if (iterContr > 4) {
+                dprintf(STDERR_FILENO, "Seems Read can't go further; test connection... [%d]\n", iterContr);
+                if (testConnection(fdPipe) == -1) {
+                    dprintf(STDERR_FILENO, "test Fail\n");
+                    return -1;
+                } else {
+                    iterContr = 0;
+                }
+            }
+        } else {
+            iterContr = 0;
+        }
+        bRead += ret;
+    } while (sizeof(mail) - bRead != 0);
+
+    pthread_sigmask(SIG_SETMASK, &oldSet, &newSet);   //restora tutto
+
+    return 0;
+}
+
+int writePack_inside(int fdPipe, mail *pack) //dentro il thArg deve essere puntato un mail
+{
+    //rispetto alla versione normale invio il puntatore di mex, per cui prima lo si mallocca ,e il ricevente lo freeza
+    /// la funzione si aspetta che il buffer non sia modificato durante l'invio
+    ssize_t bWrite = 0;
+    ssize_t ret = 0;
+    int iterazione = 0;
+
+    sigset_t newSet, oldSet;
+    sigfillset(&newSet);
+    pthread_sigmask(SIG_SETMASK, &newSet, &oldSet);
+    do {
+        dprintf(fdDebug, "writePack Funx [%d] e scrivo sulla pipe %d\n", iterazione, fdPipe);
+        iterazione++;
+        ret = write(fdPipe, pack + bWrite, sizeof(mail) - bWrite); //original
+        if (ret == -1) {
+            switch (errno) {
+                case EPIPE:
+                    dprintf(STDERR_FILENO, "writePack pipe break 1\n");
+                    return -1;
+                    //GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
+                default:
+                    perror("writePack take error:\n");
+                    return -1;
+                    break;
+            }
+        }
+        bWrite += ret;
+
+    } while (sizeof(mail) - bWrite != 0);
+    pthread_sigmask(SIG_SETMASK, &oldSet, &newSet);   //restora tutto
+    dprintf(fdDebug, "writePack Funx send sulla pipe %d\n", fdPipe);
+    return 0;
+}
+
+
+
+
 int initClient(connection *c)
 {
     if (connect(c->ds_sock,(struct sockaddr *) &c->sock,sizeof(c->sock)))
@@ -270,11 +355,11 @@ int loginUser(int ds_sock, mail *pack){
     if (fillPack(pack,login_p,0,NULL,UserName, UserID) == -1){ //utente e id saranno passati da scanf
         return -1;
     }
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -308,11 +393,11 @@ int registerUser(int ds_sock, mail *pack){
     if (fillPack(pack,mkUser_p,0,NULL,UserName, NULL) == -1){ //id sara' dato dal server
         return -1;
     }
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -446,11 +531,11 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
     // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
     fillPack(pack,mkRoom_p,strlen(buff)+1,buff,UserName,UserID); //todo: vedere schema leaveChat
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -499,10 +584,10 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack,delRm_p,0,NULL, userBuff, newBuff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -559,10 +644,10 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack,leaveRm_p,0,NULL, userBuff, newBuff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -609,11 +694,11 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack, joinRm_p, 0, NULL, UserName, buff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -660,7 +745,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack,openRm_p,0,NULL,userBuff,newBuff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -670,7 +755,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock,pack) == -1){
+    if (readPack_inside(ds_sock, pack) == -1){
         return -1;
     }
 
