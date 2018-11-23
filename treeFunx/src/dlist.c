@@ -272,7 +272,7 @@ int init_listHead(listHead_S_p head, int fd) {
 		return -1;
 	}
 
-	//enum semName {wantWrite=0,readWorking=1,writeWorking=2}; number is Id of sem
+	//enum semName {wantWrite=0,readWorking=1,writeWorking=2}; number is Id of semConv
 	unsigned short semStartVal[3] = {0, 0, 1};
 
 	//setup 3 semaphore in system5

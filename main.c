@@ -8,6 +8,7 @@
 #include "include/fileSystemUtylity.h"
 #include "include/mexData.h"
 #include "globalSet.h"
+#include "treeFunx/include/avl.h"
 
 connection *con;
 
@@ -26,7 +27,10 @@ mail packRX;
 mail packTX;
 pthread_t tidContr, tidRX, tidTX;
 
-sem_t sem;
+sem_t semConv;
+
+avl_pp_S avlACK; // verranno messi i vessaggi in attesa di una risposta;
+                 // se l'albero sara' verra' solo segnalato
 
 mex *messageTX;
 mex *messageRX;
@@ -103,8 +107,6 @@ int clientDemo(int argc, char *argv[]) {
     signal(SIGINT, closeHandler); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
 
     printf("You can talk over following chat:\n");
-    //tabPrint(tabChats);
-    //printf("\n\n\n");
 
     printChats(tabChats);
 
@@ -130,6 +132,10 @@ int clientDemo(int argc, char *argv[]) {
 
     printf("Benvenuto nella chat n.%d.\n", ChatID);
 
+    //* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
+
+    avlACK = init_avl_S();
+
     conv = startConv(pack, conv); //scarichiamo tutta la conversazione in locale
     if (conv == NULL){
         printf("Conv not initialized.\n");
@@ -142,7 +148,7 @@ int clientDemo(int argc, char *argv[]) {
 
     signal(SIGINT, changerType); //inizio a gestire i l'handler per l'uscita di messaggio
 
-    sem_init(&sem,0,0); // inizializzamo il semaforo dei thread a 0,
+    sem_init(&semConv,0,0); // inizializzamo il semaforo dei thread a 0,
                         // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
@@ -154,7 +160,7 @@ int clientDemo(int argc, char *argv[]) {
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidTX, NULL, thUserTX, pipe_inside);
 
-    sem_wait(&sem); // aspetto che uno dei due finisca la sua esecuzione
+    sem_wait(&semConv); // aspetto che uno dei due finisca la sua esecuzione
 
     void *resContr, *resRX, *resTX;
 
@@ -166,6 +172,10 @@ int clientDemo(int argc, char *argv[]) {
         pthread_join(tidRX,&resRX);
         pthread_join(tidTX,&resTX);
     } while (resContr == PTHREAD_CANCELED || resRX == PTHREAD_CANCELED || resTX == PTHREAD_CANCELED);
+
+    // Elimino l'avl della conversazione, non piu' necessario
+
+    destroy_avl(avlACK.avlRoot);
 
     signal(SIGINT, SIG_DFL);
 
@@ -183,7 +193,7 @@ void *thUserContr(connection *con){
         }
     } while (packService.md.type != delRm_p);
     delEntry(tabChats, ChatID);
-    sem_post(&sem);
+    sem_post(&semConv);
     pause();
 }
 
@@ -205,8 +215,10 @@ void *thUserRX(int pipeInside[2]) {
             break;
         }
         if(packRX.md.type == success_p){
-            writePack_inside(pipeInside[1], &packRX);
-            usleep(1000);
+            // conviene che ogni thread in caso vede se in arrivo e' un ack, e in caso accede all'albero?
+            delete_avl_node_S(avlACK,atoi(packRX.md.whoOrWhy));
+            //writePack_inside(pipeInside[1], &packRX);
+            //usleep(1000);
             continue;
         }
         if(packRX.md.type != mess_p){
@@ -224,7 +236,7 @@ void *thUserRX(int pipeInside[2]) {
         }
 
         // Conferma che tutto sia andato a buon fine
-        fillPack(&packRX, success_p, 0, NULL, userBuff, WorW);
+        fillPack(&packRX, success_p, 0, NULL, userBuff, packRX.md.whoOrWhy);
         writePack(con->ds_sock, &packRX);
 
     } while (packRX.md.type != delRm_p);
@@ -235,7 +247,7 @@ void *thUserRX(int pipeInside[2]) {
     free(packRX.mex);
     free(packTX.mex);
 
-    sem_post(&sem);
+    sem_post(&semConv);
 
     pause();
 }
@@ -260,7 +272,7 @@ void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale a
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
         // nel caso volessimo uscire non mandiamo il messaggio attualmente in scrittura
         if (TypeMex == exitRm_p) {
-            fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW);
+            fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW); // todo: aggiungere codice univoco intero (per key AVL)
             free(buff);
             break;
         }
@@ -272,6 +284,12 @@ void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale a
         if(writePack(con->ds_sock, &packTX) == -1){
             break;
         }
+
+        insert_avl_node_S(avlACK, packTX.md.whoOrWhy, packTX.md.whoOrWhy); // vedere il value da mettere
+
+        //if((avl_pp )(avlACK.avlRoot)) // avviso se l'altezza ha superato un certo valore
+
+
         printPack(&packTX);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
@@ -282,20 +300,20 @@ void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale a
         }
 
 
-        readPack_inside(pipeInside[0], &packTX);
-        if(packTX.md.type == delRm_p){
-            delEntry(tabChats,ChatID);
-            break;
-        }
-        if(packTX.md.type == mess_p){
-            writePack_inside(pipeInside[1], &packTX);
-            usleep(1000);
-            continue;
-        }
-        if(packTX.md.type != success_p){
-            printf("Unexpected pack; going to main menu...\n");
-            break;
-        }
+        //readPack_inside(pipeInside[0], &packTX);
+        //if(packTX.md.type == delRm_p){
+        //    delEntry(tabChats,ChatID);
+        //    break;
+        //}
+        //if(packTX.md.type == mess_p){
+        //    writePack_inside(pipeInside[1], &packTX);
+        //    //usleep(1000); // non dovrebbe servire per come funziona il thread
+        //    continue;
+        //}
+        //if(packTX.md.type != success_p){
+        //    printf("Unexpected pack; going to main menu...\n");
+        //    break;
+        //}
 
 
     } while (packTX.md.type != exitRm_p);
@@ -305,7 +323,7 @@ void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale a
     free(packTX.mex);
     free(packRX.mex);
 
-    sem_post(&sem);
+    sem_post(&semConv);
 
     pause();
 }

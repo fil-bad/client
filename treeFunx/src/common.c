@@ -111,7 +111,7 @@ int lockReadSem(int semId) {
 				goto SEM_wantWrite_readWorking;
 				break;
 			default:
-				perror("lockRead sem take error:");
+				perror("lockRead semConv take error:");
 				return -1;
 				break;
 		}
@@ -132,7 +132,7 @@ int unlockReadSem(int semId) {
 				goto SEM_readWorking;
 				break;
 			default:
-				perror("unlockRead sem take error:");
+				perror("unlockRead semConv take error:");
 				return -1;
 				break;
 		}
@@ -145,9 +145,9 @@ void semInfo(int semId, int fd) {
 	semctl(semId, 0, GETALL, semInfo);
 	//enum semName {wantWrite=0,readWorking=1,writeWorking=2};
 	char buf[3][4096];
-	sprintf(buf[0], "\nsem (mutex)writeWorking=%d\n", semInfo[writeWorking]);
-	sprintf(buf[1], "sem readWorking=%d\n", semInfo[readWorking]);
-	sprintf(buf[2], "sem wantWrite=%d\n", semInfo[wantWrite]);
+	sprintf(buf[0], "\nsemConv (mutex)writeWorking=%d\n", semInfo[writeWorking]);
+	sprintf(buf[1], "semConv readWorking=%d\n", semInfo[readWorking]);
+	sprintf(buf[2], "semConv wantWrite=%d\n", semInfo[wantWrite]);
 	dprintf(fd, "%s%s%s", buf[0], buf[1], buf[2]);
 
 }
