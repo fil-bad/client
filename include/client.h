@@ -102,8 +102,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats);   // ## DONE
 
 void helpChat(void);
 
-void *thUserContr(connection *con);
-void* thUserRX(int *pipeRX);
+void* thUserRX(connection *con);
 void* thUserTX(connection *con);
 
 

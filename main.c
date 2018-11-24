@@ -25,7 +25,7 @@ conversation *conv;
 
 mail packRX;
 mail packTX;
-pthread_t tidContr, tidRX, tidTX;
+pthread_t tidRX, tidTX;
 
 sem_t semConv;
 
@@ -34,8 +34,6 @@ avl_pp_S avlACK; // verranno messi i vessaggi in attesa di una risposta;
 
 mex *messageTX;
 mex *messageRX;
-
-int pipe_inside[2];
 
 int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
 
@@ -61,11 +59,6 @@ int clientDemo(int argc, char *argv[]) {
     }
     signal(SIGINT, closeHandler); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
 
-    // INIZIALIZZO LE PIPE PER I THREAD
-    if(pipe(pipe_inside) == -1){
-        perror("pipe_inside broken.\n");
-        return -1;
-    }
 
     printf("Connection with server done. ");
     mail *pack = malloc(sizeof(mail));
@@ -152,26 +145,22 @@ int clientDemo(int argc, char *argv[]) {
                         // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
-    pthread_create(&tidContr, NULL, thUserContr, con);
+    pthread_create(&tidRX, NULL, thUserRX, con);
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
-    pthread_create(&tidRX, NULL, thUserRX, pipe_inside);
-
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
-    pthread_create(&tidTX, NULL, thUserTX, pipe_inside);
+    pthread_create(&tidTX, NULL, thUserTX, con);
 
     sem_wait(&semConv); // aspetto che uno dei due finisca la sua esecuzione
 
-    void *resContr, *resRX, *resTX;
+    void *resRX, *resTX;
 
     do { //devo ciclare perche' non e' detto che il CANCEL avvenga subito
-        pthread_cancel(tidContr);
+
         pthread_cancel(tidRX);
         pthread_cancel(tidTX);
-        pthread_join(tidContr,&resContr);
         pthread_join(tidRX,&resRX);
         pthread_join(tidTX,&resTX);
-    } while (resContr == PTHREAD_CANCELED || resRX == PTHREAD_CANCELED || resTX == PTHREAD_CANCELED);
+    } while (resRX == PTHREAD_CANCELED || resTX == PTHREAD_CANCELED);
 
     // Elimino l'avl della conversazione, non piu' necessario
 
@@ -182,43 +171,25 @@ int clientDemo(int argc, char *argv[]) {
     goto showChat;
 }
 
-void *thUserContr(connection *con){
-    mail packService;
-    do {
-        if(readPack(con->ds_sock, &packService) == -1){
-            break;
-        }
-        if(writePack_inside(pipe_inside[1], &packService) == -1){
-            break;
-        }
-    } while (packService.md.type != delRm_p);
-    delEntry(tabChats, ChatID);
-    sem_post(&semConv);
-    pause();
-}
 
-void *thUserRX(int pipeInside[2]) {
-
-    char WorW[wowDim];
-    sprintf(WorW, "%d",ChatID); //Immettiamo il ChatID per comunicare al server a chi scriviamo
-
-    char userBuff[sendDim];
-    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
-
+void *thUserRX(connection *con) {
 
     do {
-        if(readPack_inside(pipeInside[0], &packRX) == -1){
+        if(readPack(con->ds_sock, &packRX) == -1){
             break;
         }
-        if(packRX.md.type == delRm_p){
-            delEntry(tabChats, ChatID);
-            break;
+        if(packRX.md.type == delRm_p){ //potrei riceverlo di un'altra chat
+
+            int entCH = atoi(packRX.md.whoOrWhy);
+            delEntry(tabChats, entCH);
+            if(entCH == ChatID) break; // se e' della chat esco dalla RX
+            else continue;             // se e' di un'altra, continuo
         }
         if(packRX.md.type == success_p){
-            // conviene che ogni thread in caso vede se in arrivo e' un ack, e in caso accede all'albero?
             delete_avl_node_S(avlACK, atoi(packRX.md.whoOrWhy));
             continue;
         }
+        if(packRX.md.type == failed_p); //ignoro questo stato
         if(packRX.md.type != mess_p){
             printf("Unexpected pack; going to main menu...\n");
             break;
@@ -232,10 +203,6 @@ void *thUserRX(int pipeInside[2]) {
             printf("Error writing mex on conv in RX.\n");
             break;
         }
-
-        // Conferma che tutto sia andato a buon fine
-        fillPack(&packRX, success_p, 0, NULL, userBuff, packRX.md.whoOrWhy);
-        writePack(con->ds_sock, &packRX);
 
     } while (packRX.md.type != delRm_p);
 
@@ -254,7 +221,7 @@ void *thUserRX(int pipeInside[2]) {
 void* thUserTX(connection *con){
 
     char *buff;
-    long int codMex;
+    int codMex = 0;
     char WorW[wowDim];
 
     char userBuff[sendDim];
@@ -268,8 +235,8 @@ void* thUserTX(connection *con){
         printf("\n>>> ");
         buff = obtainStr(buff); //messaggio da mandare
 
-        codMex = random();
-        sprintf(WorW, "%ld", codMex); //codice "univoco" per il messaggio
+        sprintf(WorW, "%d", codMex); //codice "univoco" per il messaggio
+        codMex++;
 
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
         // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
@@ -294,7 +261,6 @@ void* thUserTX(connection *con){
             sleep(5);
         }
 
-
         printPack(&packTX); //todo: funzione per il print a schermo
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
@@ -303,24 +269,6 @@ void* thUserTX(connection *con){
             printf("Error writing mex on conv in TX.\n");
             break;
         }
-
-
-        //readPack_inside(pipeInside[0], &packTX);
-        //if(packTX.md.type == delRm_p){
-        //    delEntry(tabChats,ChatID);
-        //    break;
-        //}
-        //if(packTX.md.type == mess_p){
-        //    writePack_inside(pipeInside[1], &packTX);
-        //    //usleep(1000); // non dovrebbe servire per come funziona il thread
-        //    continue;
-        //}
-        //if(packTX.md.type != success_p){
-        //    printf("Unexpected pack; going to main menu...\n");
-        //    break;
-        //}
-
-
     } while (packTX.md.type != exitRm_p);
 
     // pthread_cancel(tidRX);
