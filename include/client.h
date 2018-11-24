@@ -104,7 +104,7 @@ void helpChat(void);
 
 void *thUserContr(connection *con);
 void* thUserRX(int *pipeRX);
-void* thUserTX(int *pipeInside);
+void* thUserTX(connection *con);
 
 
 #endif //CLIENT_CLIENT_H

@@ -226,7 +226,7 @@ void *thUserRX(int pipeInside[2]) {
             break;
         }
 
-        printPack(&packRX);
+        printPack(&packRX); //todo: funzione per il print a schermo
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
         messageRX = makeMex(packRX.mex, (int)strtol(UserID,NULL,10));
@@ -253,10 +253,11 @@ void *thUserRX(int pipeInside[2]) {
 }
 
 
-void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale ack sia arrivato
+void* thUserTX(connection *con){
+
     char *buff;
+    long int codMex;
     char WorW[wowDim];
-    sprintf(WorW, "%d",ChatID); //Immettiamo il ChatID per comunicare al server a chi scriviamo
 
     char userBuff[sendDim];
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
@@ -269,10 +270,13 @@ void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale a
         printf("\n>>> ");
         buff = obtainStr(buff); //messaggio da mandare
 
+        codMex = random();
+        sprintf(WorW, "%ld", codMex); //codice "univoco" per il messaggio
+
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
-        // nel caso volessimo uscire non mandiamo il messaggio attualmente in scrittura
+        // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
         if (TypeMex == exitRm_p) {
-            fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW); // todo: aggiungere codice univoco intero (per key AVL)
+            fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW);
             free(buff);
             break;
         }
@@ -285,12 +289,15 @@ void* thUserTX(int pipeInside[2]){ //todo: aggiungere AVL per ricordarsi quale a
             break;
         }
 
-        insert_avl_node_S(avlACK, packTX.md.whoOrWhy, packTX.md.whoOrWhy); // vedere il value da mettere
+        insert_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy)); // vedere il value da mettere
 
-        //if((avl_pp )(avlACK.avlRoot)) // avviso se l'altezza ha superato un certo valore
+        if((**(avlACK.avlRoot)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
+            printf("Attention, AVL height is %d, there could be some problems on the server.\n",(**(avlACK.avlRoot)).height);
+            sleep(5);
+        }
 
 
-        printPack(&packTX);
+        printPack(&packTX); //todo: funzione per il print a schermo
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
         messageTX = makeMex(packRX.mex, (int)strtol(UserID,NULL,10));
