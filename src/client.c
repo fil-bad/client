@@ -236,6 +236,13 @@ void printPack(mail *pack)
     printf("TEXT :\n--> %p\n\n",pack->mex); //non sempre stringa
 }
 
+void printTextPack(mail *pack){
+    printf("(%s):\t%s\n\n",pack->md.sender, (char *)pack->mex);
+}
+
+
+
+
 ///         ### Client FUNCTION ###
 
 int readPack_inside(int fdPipe, mail *pack) {

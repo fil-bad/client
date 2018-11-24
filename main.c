@@ -13,9 +13,9 @@
 connection *con;
 
 char* UserID; // UserID restituito al termine della creazione utente
-char* UserName; //Username retituito allo stesso punto
+char* UserName; //Username restituito allo stesso punto
 
-int ChatID; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
+int ChatEntry; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
 
 char convName[64];
 
@@ -116,14 +116,14 @@ int clientDemo(int argc, char *argv[]) {
         return 0;
     }
 
-    ChatID = chooseAction(buff, con, pack, tabChats);
+    ChatEntry = chooseAction(buff, con, pack, tabChats);
 
     if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 5))
     {
         goto showChat;
     }
 
-    printf("Benvenuto nella chat n.%d.\n", ChatID);
+    printf("Benvenuto nella chat %s .\n", tabChats->data[ChatEntry].name);
 
     //* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
 
@@ -182,20 +182,20 @@ void *thUserRX(connection *con) {
 
             int entCH = atoi(packRX.md.whoOrWhy);
             delEntry(tabChats, entCH);
-            if(entCH == ChatID) break; // se e' della chat esco dalla RX
+            if(entCH == ChatEntry) break; // se e' della chat esco dalla RX
             else continue;             // se e' di un'altra, continuo
         }
         if(packRX.md.type == success_p){
             delete_avl_node_S(avlACK, atoi(packRX.md.whoOrWhy));
             continue;
         }
-        if(packRX.md.type == failed_p); //ignoro questo stato
+        if(packRX.md.type == failed_p) continue; //ignoro questo stato
         if(packRX.md.type != mess_p){
             printf("Unexpected pack; going to main menu...\n");
             break;
         }
-
-        printPack(&packRX); //todo: funzione per il print a schermo
+        printTextPack(&packRX);
+        //printPack(&packRX);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
         messageRX = makeMex(packRX.mex, (int)strtol(UserID,NULL,10));
@@ -207,7 +207,7 @@ void *thUserRX(connection *con) {
     } while (packRX.md.type != delRm_p);
 
     // pthread_cancel(tidTX);
-    if(packRX.md.type == delRm_p) delEntry(tabChats, ChatID);
+    if(packRX.md.type == delRm_p) delEntry(tabChats, ChatEntry);
 
     free(packRX.mex);
     free(packTX.mex);
@@ -260,8 +260,8 @@ void* thUserTX(connection *con){
             printf("Attention, AVL height is %d, there could be some problems on the server.\n",(**(avlACK.avlRoot)).height);
             sleep(5);
         }
-
-        printPack(&packTX); //todo: funzione per il print a schermo
+        printTextPack(&packTX);
+        //printPack(&packTX);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
         messageTX = makeMex(packRX.mex, (int)strtol(UserID,NULL,10));

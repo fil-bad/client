@@ -74,6 +74,7 @@ int testConnection(int ds_sock);
 
 int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOrWhy);
 void printPack(mail *pack);
+void printTextPack(mail *pack); //versione con solo testo;
 
 ///Client FUNCTION
 int readPack_inside(int fdPipe, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
