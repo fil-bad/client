@@ -216,9 +216,7 @@ void *thUserRX(int pipeInside[2]) {
         }
         if(packRX.md.type == success_p){
             // conviene che ogni thread in caso vede se in arrivo e' un ack, e in caso accede all'albero?
-            delete_avl_node_S(avlACK,atoi(packRX.md.whoOrWhy));
-            //writePack_inside(pipeInside[1], &packRX);
-            //usleep(1000);
+            delete_avl_node_S(avlACK, atoi(packRX.md.whoOrWhy));
             continue;
         }
         if(packRX.md.type != mess_p){
