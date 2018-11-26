@@ -27,17 +27,17 @@
 
 
 typedef struct avl {
-	int keyNode;
-	int data;
-	struct avl *left;
-	struct avl *right;
-	int height;
+    int keyNode;
+    int data;
+    struct avl *left;
+    struct avl *right;
+    int height;
 } avl_t, *avl_p, **avl_pp;
 
 
 typedef struct avlThSafe {
-	avl_pp avlRoot;
-	int semId;
+    avl_pp avlRoot;
+    int semId;
 } avl_pp_S;
 
 /* Generate AVL tree from an array of input values */

@@ -30,7 +30,7 @@ pthread_t tidRX, tidTX;
 sem_t semConv;
 
 avl_pp_S avlACK; // verranno messi i vessaggi in attesa di una risposta;
-                 // se l'albero sara' verra' solo segnalato
+// se l'albero sara' verra' solo segnalato
 
 mex *messageTX;
 mex *messageRX;
@@ -117,23 +117,26 @@ int clientDemo(int argc, char *argv[]) {
     }
 
     ChatEntry = chooseAction(buff, con, pack, tabChats);
+    if (ChatEntry == -1) goto showChat;
 
     if (!(strcmp(buff,"openChat") == 0 || strtol(buff,NULL,10) == 5))
     {
         goto showChat;
     }
 
-    printf("Benvenuto nella chat %s .\n", tabChats->data[ChatEntry].name);
-
-    //* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
-
-    avlACK = init_avl_S();
+    printf("Benvenuto nella chat %s.\n", tabChats->data[ChatEntry].name);
 
     conv = startConv(pack, conv); //scarichiamo tutta la conversazione in locale
     if (conv == NULL){
         printf("Conv not initialized.\n");
         return -1;
     }
+    printConv(conv, STDOUT_FILENO);
+    //* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
+
+    avlACK = init_avl_S();
+    printf("Avl initialized.\n");
+
 
     printf("Entro nella room...\n");
 
@@ -142,7 +145,7 @@ int clientDemo(int argc, char *argv[]) {
     signal(SIGINT, changerType); //inizio a gestire i l'handler per l'uscita di messaggio
 
     sem_init(&semConv,0,0); // inizializzamo il semaforo dei thread a 0,
-                        // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
+    // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
     pthread_create(&tidRX, NULL, thUserRX, con);
@@ -189,7 +192,10 @@ void *thUserRX(connection *con) {
             delete_avl_node_S(avlACK, atoi(packRX.md.whoOrWhy));
             continue;
         }
-        if(packRX.md.type == failed_p) continue; //ignoro questo stato
+        if(packRX.md.type == failed_p){
+            printf("Failed received, cause: %s\n", packRX.md.whoOrWhy);
+            continue;
+        } //ignoro questo stato
         if(packRX.md.type != mess_p){
             printf("Unexpected pack; going to main menu...\n");
             break;
@@ -245,26 +251,29 @@ void* thUserTX(connection *con){
             free(buff);
             break;
         }
-        // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
+            // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
         else {
             fillPack(&packTX, TypeMex, strlen(buff) + 1, buff, userBuff, WorW);
-            free(buff);
         }
+        insert_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy)); // vedere il value da mettere
+
         if(writePack(con->ds_sock, &packTX) == -1){
+            //todo: se c'e' un errore levo il nodo
             break;
         }
 
-        insert_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy)); // vedere il value da mettere
-
+        lockReadSem(avlACK.semId);
         if((**(avlACK.avlRoot)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
             printf("Attention, AVL height is %d, there could be some problems on the server.\n",(**(avlACK.avlRoot)).height);
             sleep(5);
         }
+        unlockReadSem(avlACK.semId);
+
         printTextPack(&packTX);
         //printPack(&packTX);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
-        messageTX = makeMex(packRX.mex, (int)strtol(UserID,NULL,10));
+        messageTX = makeMex(packTX.mex, (int)strtol(UserID,NULL,10));
         if (addMex(conv, messageTX) == -1){
             printf("Error writing mex on conv in TX.\n");
             break;

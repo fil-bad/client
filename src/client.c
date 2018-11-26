@@ -2,22 +2,22 @@
 // Created by filippo on 25/09/18.
 //
 
+#include <unistd.h>
 #include "../include/client.h"
 #include "../include/tableFile.h"
 #include "../include/fileSystemUtylity.h"
 
 extern char *UserName;
-extern char* UserID;
+extern char *UserID;
 extern char convName[64];
 
 /// GLOBAL FUNCTION
-connection* initSocket(u_int16_t port, char* IP)
-{
+connection *initSocket(u_int16_t port, char *IP) {
     connection *con = malloc(sizeof(connection));
 
     con->ds_sock = socket(AF_INET, SOCK_STREAM, 0);
 
-    if(keepAlive(&con->ds_sock) == -1){
+    if (keepAlive(&con->ds_sock) == -1) {
         return NULL;
     };
 
@@ -26,15 +26,13 @@ connection* initSocket(u_int16_t port, char* IP)
     con->sock.sin_port = htons(port);
     if (strcmp(IP, "INADDR_ANY") == 0) {
         con->sock.sin_addr.s_addr = INADDR_ANY;
-    }
-    else {
+    } else {
         con->sock.sin_addr.s_addr = inet_addr(IP);
     }
     return con;
 }
 
-int keepAlive(int *ds_sock)
-{
+int keepAlive(int *ds_sock) {
     /// KEEPALIVE FUNCTION: vedere header per breve documentazione
     int optval;
     socklen_t optlen;
@@ -43,7 +41,7 @@ int keepAlive(int *ds_sock)
     // Tempo di primo ACK (tcp_keepalive_time)
     optval = 90; //tempo in secondi
     optlen = sizeof(optval);
-    if(setsockopt(*ds_sock, IPPROTO_TCP , TCP_KEEPIDLE, &optval, optlen) < 0) {
+    if (setsockopt(*ds_sock, IPPROTO_TCP, TCP_KEEPIDLE, &optval, optlen) < 0) {
         perror("setsockopt()");
         close(*ds_sock);
         return -1;
@@ -52,7 +50,7 @@ int keepAlive(int *ds_sock)
     // Numero di "sonde" prima dell'abort (tcp_keepalive_probes)
     optval = 5; // n. di tentativi
     optlen = sizeof(optval);
-    if(setsockopt(*ds_sock, IPPROTO_TCP , TCP_KEEPCNT, &optval, optlen) < 0) {
+    if (setsockopt(*ds_sock, IPPROTO_TCP, TCP_KEEPCNT, &optval, optlen) < 0) {
         perror("setsockopt()");
         close(*ds_sock);
         return -1;
@@ -61,7 +59,7 @@ int keepAlive(int *ds_sock)
     //Tempo tra una sonda e l'altra (tcp_keepalive_intvl)
     optval = 6; // tempo in secondi tra l'uno e l'altro
     optlen = sizeof(optval);
-    if(setsockopt(*ds_sock, IPPROTO_TCP , TCP_KEEPINTVL, &optval, optlen) < 0) {
+    if (setsockopt(*ds_sock, IPPROTO_TCP, TCP_KEEPINTVL, &optval, optlen) < 0) {
         perror("setsockopt()");
         close(*ds_sock);
         return -1;
@@ -72,7 +70,7 @@ int keepAlive(int *ds_sock)
     // Attiviamo il keepalive
     optval = 1;
     optlen = sizeof(optval);
-    if(setsockopt(*ds_sock, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0) {
+    if (setsockopt(*ds_sock, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0) {
         perror("setsockopt()");
         close(*ds_sock);
         return -1;
@@ -82,15 +80,14 @@ int keepAlive(int *ds_sock)
     return 0;
 }
 
-void freeConnection(connection* con)
-{
+void freeConnection(connection *con) {
     free(con);
 }
 
-int readPack(int ds_sock, mail *pack)
-{
+int readPack(int ds_sock, mail *pack) {
     int iterContr = 0; // vediamo se la read fallisce
 
+    printf("[ReadPack] Pack is located at %p\n", pack);
 
     ssize_t bRead = 0;
     ssize_t ret = 0;
@@ -184,12 +181,10 @@ int writePack(int ds_sock, mail *pack) //dentro il thArg deve essere puntato un 
 }
 
 
-
-int testConnection(int ds_sock)
-{
+int testConnection(int ds_sock) {
 
     mail packTest;
-    fillPack(&packTest,test_p, 0, NULL, "SERVER", "testing_code");
+    fillPack(&packTest, test_p, 0, NULL, "SERVER", "testing_code");
 
     if (writePack(ds_sock, &packTest) == -1) {
         return -1;
@@ -213,31 +208,30 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
     if (sender == NULL) strncpy(pack->md.sender, "", sendDim);
     else {
         strncpy(pack->md.sender, sender, sendDim);
-        pack->md.sender[sendDim-1] = '\0'; // sono sicuro che possa venir letto come una stringa
+        pack->md.sender[sendDim - 1] = '\0'; // sono sicuro che possa venir letto come una stringa
     }
 
     if (whoOrWhy == NULL) strncpy(pack->md.whoOrWhy, "", wowDim);
-    else{
+    else {
         strncpy(pack->md.whoOrWhy, whoOrWhy, wowDim);
-        pack->md.whoOrWhy[wowDim-1] = '\0'; // sono sicuro che possa venir letto come una stringa
+        pack->md.whoOrWhy[wowDim - 1] = '\0'; // sono sicuro che possa venir letto come una stringa
     }
 
     return 0;
 }
 
-void printPack(mail *pack)
-{
+void printPack(mail *pack) {
     printf("######[][]I METADATI SONO[][]######\n");
-    printf("Dim pack = %ld\n",pack->md.dim);
-    printf("Type = %d\n",pack->md.type);
-    printf("Sender = %s\n",pack->md.sender);
-    printf("whoOrWhy = %s\n",pack->md.whoOrWhy);
+    printf("Dim pack = %ld\n", pack->md.dim);
+    printf("Type = %d\n", pack->md.type);
+    printf("Sender = %s\n", pack->md.sender);
+    printf("whoOrWhy = %s\n", pack->md.whoOrWhy);
     printf("------[][]IL MESSAGGIO[][]------\n");
-    printf("TEXT :\n--> %p\n\n",pack->mex); //non sempre stringa
+    printf("TEXT :\n--> %p\n\n", pack->mex); //non sempre stringa
 }
 
-void printTextPack(mail *pack){
-    printf("(%s):\t%s\n\n",pack->md.sender, (char *)pack->mex);
+void printTextPack(mail *pack) {
+    printf("(%s):\t%s\n\n", pack->md.sender, (char *) pack->mex);
 }
 
 
@@ -330,10 +324,8 @@ int writePack_inside(int fdPipe, mail *pack) //dentro il thArg deve essere punta
 
 
 
-int initClient(connection *c)
-{
-    if (connect(c->ds_sock,(struct sockaddr *) &c->sock,sizeof(c->sock)))
-    {
+int initClient(connection *c) {
+    if (connect(c->ds_sock, (struct sockaddr *) &c->sock, sizeof(c->sock))) {
         perror("Connect error; cause:");
         close(c->ds_sock);
         return -1;
@@ -341,7 +333,7 @@ int initClient(connection *c)
     return 0;
 }
 
-char *obtainStr(char *buff){
+char *obtainStr(char *buff) {
     antiSegFault:
     scanf("%m[^\n]", &buff);
     fflush(stdin);
@@ -349,7 +341,7 @@ char *obtainStr(char *buff){
     return buff;
 }
 
-int loginUser(int ds_sock, mail *pack){
+int loginUser(int ds_sock, mail *pack) {
 
     rescue: //risolvere consistenza stringhe
 
@@ -361,20 +353,20 @@ int loginUser(int ds_sock, mail *pack){
     UserID = obtainStr(UserID);
     printf("\n");
 
-    if (fillPack(pack,login_p,0,NULL,UserName, UserID) == -1){ //utente e id saranno passati da scanf
+    if (fillPack(pack, login_p, 0, NULL, UserName, UserID) == -1) { //utente e id saranno passati da scanf
         return -1;
     }
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
-            printf("Login effettuato come %s, %s\n",UserID, UserName);
+            printf("Login effettuato come %s, %s\n", UserID, UserName);
             return 0;
             break;
 
@@ -392,31 +384,31 @@ int loginUser(int ds_sock, mail *pack){
     return 0;
 }
 
-int registerUser(int ds_sock, mail *pack){
+int registerUser(int ds_sock, mail *pack) {
 
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 23 caratteri) >>> ");
     UserName = obtainStr(UserName);
     printf("\n");
 
-    if (fillPack(pack,mkUser_p,0,NULL,UserName, NULL) == -1){ //id sara' dato dal server
+    if (fillPack(pack, mkUser_p, 0, NULL, UserName, NULL) == -1) { //id sara' dato dal server
         return -1;
     }
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
             UserID = malloc(wowDim);
-            strcpy(UserID,pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
+            strcpy(UserID, pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
 
-            printf("### UserID = %s ### (chiave d'accesso per successivi login)\n",UserID);
-            int id = (int)strtol(pack->md.whoOrWhy,NULL,10);
+            printf("### UserID = %s ### (chiave d'accesso per successivi login)\n", UserID);
+            int id = (int) strtol(pack->md.whoOrWhy, NULL, 10);
             return id;
             break;
 
@@ -434,14 +426,14 @@ int registerUser(int ds_sock, mail *pack){
     return 0;
 }
 
-table *initClientTable(table *tabChats, mail *pack){
+table *initClientTable(table *tabChats, mail *pack) {
 
-    if (StartClientStorage("ChatList") == -1){
+    if (StartClientStorage("ChatList") == -1) {
         return NULL;
     }
     FILE *temp = fopen(chatTable, "w+");
 
-    if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
+    if (fileWrite(temp, pack->md.dim, 1, pack->mex) == -1) {
         printf("Error writing file\n");
         return NULL;
     }
@@ -452,77 +444,75 @@ table *initClientTable(table *tabChats, mail *pack){
     return tabChats;
 }
 
-void printChats(table *tabChats){
+void printChats(table *tabChats) {
     printf("\t**********\n");
     for (int i = 0; i < tabChats->head.len; i++) {
-        printf("\t%s\n",tabChats->data[i].name);
+        printf("\t%s\n", tabChats->data[i].name);
     }
     printf("\t**********\n");
 }
 
-conversation* startConv(mail *pack, conversation *conv){
+conversation *startConv(mail *pack, conversation *conv) {
+
+    //char convPath[64];
+    //sprintf(convPath, "./%s", convName);
+    char curDir[100];
+    getcwd(curDir, 100);
+    printf("try opening path = %s\nmy current directory = %s\n", convName, curDir);
 
     conv = openConf(convName);
-    printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
+    //printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
-    char *buff;
-    retry:
-    buff = obtainStr(buff);
-    if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
-    else if (strcmp(buff,"n") == 0);
-    else goto retry;
+    fflush(stdin);
+
+    //char *buff;
+    //retry:
+    //buff = obtainStr(buff);
+    //if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
+    //else if (strcmp(buff,"n") == 0);
+    //else goto retry;
 
     return conv;
 }
 
 
-
-
-
 /* #### SCELTA AZIONI ####*/
 
-int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
+int chooseAction(char *command, connection *con, mail *pack, table *tabChats) {
 
     int value = -1;
 
-    if(strcmp(command,"createChat") == 0 || strtol(command,NULL,10) == 1){
+    if (strcmp(command, "createChat") == 0 || strtol(command, NULL, 10) == 1) {
         value = createChat(con->ds_sock, pack, tabChats);
-        if(value == -1) {
+        if (value == -1) {
             printf("Creation failed.\n");
             return -1;
         }
-    }
-    else if(strcmp(command,"deleteChat") == 0 || strtol(command,NULL,10) == 2){
-        if (deleteChat(con->ds_sock,pack, tabChats) == -1){
+    } else if (strcmp(command, "deleteChat") == 0 || strtol(command, NULL, 10) == 2) {
+        if (deleteChat(con->ds_sock, pack, tabChats) == -1) {
             printf("Unable to delete the chat. Returning to chat selection...\n");
             return -1;
         }
-    }
-    else if(strcmp(command,"leaveChat") == 0 || strtol(command,NULL,10) == 3){
-        if (leaveChat(con->ds_sock,pack, tabChats) == -1){
+    } else if (strcmp(command, "leaveChat") == 0 || strtol(command, NULL, 10) == 3) {
+        if (leaveChat(con->ds_sock, pack, tabChats) == -1) {
             printf("Unable to delete the chat. Returning to chat selection...\n");
             return -1;
         }
-    }
-    else if(strcmp(command,"joinChat") == 0 || strtol(command,NULL,10) == 4) {
-        value = joinChat(con->ds_sock, pack, tabChats);
-        if (value == -1) {
+    } else if (strcmp(command, "joinChat") == 0 || strtol(command, NULL, 10) == 4) {
+        if (joinChat(con->ds_sock, pack, tabChats) == -1) {
             printf("Unable to join the chat. Returning to chat selection...\n");
             return -1;
         }
-    }
-    else if(strcmp(command,"openChat") == 0 || strtol(command,NULL,10) == 5){
+    } else if (strcmp(command, "openChat") == 0 || strtol(command, NULL, 10) == 5) {
         value = openChat(con->ds_sock, pack, tabChats);
-        if (value == -1){
+        if (value == -1) {
             printf("Unable to open the chat. Returning to chat selection...\n");
             return -1;
         }
-    }
-    else if(strcmp(command,"printTab") == 0 || strcmp(command,"$p") == 0){
-	    tabPrint(tabChats);
-	    printf("\n\n\n");
-    }
-    else {
+    } else if (strcmp(command, "printTab") == 0 || strcmp(command, "$p") == 0) {
+        tabPrint(tabChats);
+        printf("\n\n\n");
+    } else {
         helpChat();
         return -1;
     }
@@ -533,27 +523,27 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats){
 
 /* ##### AZIONI DELLE SCELTE SELEZIONATE ##### */
 
-int createChat(int ds_sock, mail *pack, table *tabChats){
+int createChat(int ds_sock, mail *pack, table *tabChats) {
     printf("Creazione nuova chat; scegliere il nome (max 23 caratteri):\n");
 
     char *buff;
     buff = obtainStr(buff);
     // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
-    fillPack(pack,mkRoom_p,strlen(buff)+1,buff,UserName,UserID); //todo: vedere schema leaveChat
+    fillPack(pack, mkRoom_p, strlen(buff) + 1, buff, UserName, UserID); //todo: vedere schema leaveChat
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
-            addEntry(tabChats,pack->md.whoOrWhy,0);
+            printf("Creazione effettuata\n<Id>:<Nome_Room> = %s\n", pack->md.whoOrWhy);
+            addEntry(tabChats, pack->md.whoOrWhy, 0);
             return searchFirstOccurrence(tabChats, pack->md.whoOrWhy);
             break;
 
@@ -571,7 +561,7 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
-int deleteChat(int ds_sock, mail *pack, table *tabChats){
+int deleteChat(int ds_sock, mail *pack, table *tabChats) {
     //possibile solo se l'utente e' ADMIN di tale chat
 
     printf("Eliminazione chat; scegliere l'ID:\n");
@@ -580,31 +570,31 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
     buff = obtainStr(buff);
 
     int indexEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
-    if (indexEntry == -1){
+    if (indexEntry == -1) {
         printf("ID not found.\n");
         return -1;
     }
 
     char newBuff[wowDim]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
-    sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
+    sprintf(newBuff, "%s:%d", buff, indexEntry); // idKey:EntryPosition
 
     char userBuff[sendDim];
-    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+    sprintf(userBuff, "%s:%s", UserID, UserName); // UserID:UserName
 
 
-    fillPack(pack,delRm_p,0,NULL, userBuff, newBuff);
+    fillPack(pack, delRm_p, 0, NULL, userBuff, newBuff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case success_p:
             // (anche vuota, dove scrivere le chat)
-            printf("Eliminazione effettuata\n<Id>:<Nome_Room> = %s\n",pack->md.whoOrWhy);
+            printf("Eliminazione effettuata\n<Id>:<Nome_Room> = %s\n", pack->md.whoOrWhy);
             delEntry(tabChats, indexEntry);
             return 0;
             break;
@@ -613,7 +603,7 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
             printf("Eliminazione gia' effettuata da qualcuno.\nServer Report: %s\n", pack->md.whoOrWhy);
             delEntry(tabChats, indexEntry);
             errno = EINVAL;
-            return -2;
+            return -1;
             break;
 
         case failed_p:
@@ -631,7 +621,7 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
-int leaveChat(int ds_sock, mail *pack, table *tabChats){
+int leaveChat(int ds_sock, mail *pack, table *tabChats) {
     // possibile per qualunque utente; se era l'ultimo della chat,
     // il server elimina tutta la persistenza della chat
     printf("Leaving chat; scegliere l'ID:\n");
@@ -640,32 +630,32 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     buff = obtainStr(buff);
 
     int indexEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
-    if (indexEntry == -1){
+    if (indexEntry == -1) {
         printf("ID not found.\n");
         return -1;
     }
 
     char newBuff[wowDim];
-    sprintf(newBuff,"%s:%d",buff,indexEntry); // idKey:EntryPosition
+    sprintf(newBuff, "%s:%d", buff, indexEntry); // idKey:EntryPosition
 
     char userBuff[sendDim];
-    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+    sprintf(userBuff, "%s:%s", UserID, UserName); // UserID:UserName
 
 
-    fillPack(pack,leaveRm_p,0,NULL, userBuff, newBuff);
+    fillPack(pack, leaveRm_p, 0, NULL, userBuff, newBuff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case success_p:
             // (anche vuota, dove scrivere le chat)
             printf("Leave riuscito\n");
-            delEntry(tabChats,indexEntry);
+            delEntry(tabChats, indexEntry);
             return 0;
             break;
 
@@ -673,7 +663,7 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
             printf("Eliminazione gia' effettuata da qualcuno.\nServer Report: %s\n", pack->md.whoOrWhy);
             delEntry(tabChats, indexEntry);
             errno = EINVAL;
-            return -2;
+            return -1;
             break;
 
         case failed_p:
@@ -690,35 +680,34 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
-int joinChat(int ds_sock, mail *pack, table *tabChats){
+int joinChat(int ds_sock, mail *pack, table *tabChats) {
     printf("Join nuova chat; scrivere ID.\n<ID>: ");
 
     char *buff;
     buff = obtainStr(buff);
 
-    int numEntry = searchFirstOccurrenceKey(tabChats, (int)strtol(buff, NULL, 10));
-    if( numEntry != -1){
+    int numEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
+    if (numEntry != -1) {
         printf("Chat < %s > already exists, please use 'openChat'/'4' + 'chatName'.\n", buff);
         return -1;
     }
 
     fillPack(pack, joinRm_p, 0, NULL, UserName, buff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case dataRm_p:
             printf("Join effettuato\n");
-            entry *newChat = (entry *)pack->mex;
-            addEntry(tabChats,newChat->name,newChat->point);
-            int search= searchFirstOccurrence(tabChats, newChat->name);
-            return (int) strtol(tabChats->data[search].name, NULL, 10);
+            entry *newChat = (entry *) pack->mex;
+            addEntry(tabChats, newChat->name, newChat->point);
+            return 0;
             break;
 
         case failed_p:
@@ -735,68 +724,69 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
-int openChat(int ds_sock, mail *pack, table *tabChats){
+int openChat(int ds_sock, mail *pack, table *tabChats) {
     printf("Selezione chat esistente; scegliere il nome:\n");
 
     char *buff;
     buff = obtainStr(buff);
 
     int numEntry = searchFirstOccurrenceKey(tabChats, atoi(buff));
-    if( numEntry == -1){
+    if (numEntry == -1) {
         printf("Chat not exists, please choose one of the following, or create one.\n");
         return -1;
     }
 
     char newBuff[wowDim]; //non e' un problema se di dimensione fissa, perche' prima cerchiamo se esista!
-    sprintf(newBuff,"%s:%d",buff,numEntry); // idKey:EntryPosition
+    sprintf(newBuff, "%s:%d", buff, numEntry); // idKey:EntryPosition
 
     char userBuff[sendDim];
-    sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
+    sprintf(userBuff, "%s:%s", UserID, UserName); // UserID:UserName
 
-    fillPack(pack,openRm_p,0,NULL,userBuff,newBuff);
+    fillPack(pack, openRm_p, 0, NULL, userBuff, newBuff);
 
-    if (writePack(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    int i=0;
+    int i = 0;
     mex *mexBuff[4096];
 
     retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1) {
         return -1;
     }
 
-    switch (pack->md.type){
+    switch (pack->md.type) {
         case kConv_p:
             // (anche vuota, dove scrivere le chat)
             printf("Open successful\n");
             printPack(pack);
-            sprintf(convName,"convList%s",pack->md.whoOrWhy); // in WoW il nome della room
+            sprintf(convName, "convList_%s.conv", pack->md.whoOrWhy); // in WoW il nome della room
 
-            FILE *temp = fopen(convName, "w");
-            if(fileWrite(temp,pack->md.dim,1,pack->mex) == -1){
+            FILE *temp = fopen(convName, "w+");
+            if (fileWrite(temp, pack->md.dim, 1, pack->mex) == -1) {
                 printf("Error writing file\n");
                 return -1;
             }
-            for (int j = 0; j < i ; j++) {
-                saveNewMexF(mexBuff[j],temp);
+            for (int j = 0; j < i; j++) {
+                saveNewMexF(mexBuff[j], temp);
             }
             fclose(temp);
 
-            while (i < 0){
+            while (i < 0) {
                 freeMex(mexBuff[i]);
+                mexBuff[i] = NULL;
                 i--;
             }
-            return atoi(buff);
+            return numEntry;
             break;
 
         case mess_p: //mi e' arrivato un messaggio prima della conversazione
-            mexBuff[i] = makeMexBuf(pack->md.dim,pack->mex);
-            if (!mexBuff[i]){
-                while (i < 0){
+            mexBuff[i] = makeMexBuf(pack->md.dim, pack->mex);
+            if (!mexBuff[i]) {
+                while (i < 0) {
                     freeMex(mexBuff[i]);
                     i--;
                 }
@@ -808,7 +798,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         case failed_p:
             printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
-            while (i < 0){
+            while (i < 0) {
                 freeMex(mexBuff[i]);
                 i--;
             }
@@ -817,8 +807,8 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
 
         case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
             printf("Open error. %s is a no-existing more chat. Deleting...\n", buff);
-            delEntry(tabChats,numEntry);
-            while (i < 0){
+            delEntry(tabChats, numEntry);
+            while (i < 0) {
                 freeMex(mexBuff[i]);
                 i--;
             }
@@ -828,7 +818,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
         default:
             printf("Unespected behaviour from server.\n");
             errno = EINVAL;
-            while (i < 0){
+            while (i < 0) {
                 freeMex(mexBuff[i]);
                 i--;
             }
@@ -838,7 +828,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     return 0;
 }
 
-void helpChat(void){
+void helpChat(void) {
     printf("\n\nCreateChat: crea un nuovo canale di conversazione.\n");
     printf("DeleteChat: elimina un canale di conversazione (possibile solo se si e' admin dello stesso).\n");
     printf("LeaveChat: lascia un canale di conversazione.\n");
