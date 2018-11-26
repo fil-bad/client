@@ -244,7 +244,7 @@ void printTextPack(mail *pack){
 
 
 ///         ### Client FUNCTION ###
-
+/*
 int readPack_inside(int fdPipe, mail *pack) {
     //rispetto alla versione normale ricevo il puntatore di mex, per cui prima è stato malloccato,e ora il ricevente lo freezerà
 
@@ -289,7 +289,9 @@ int readPack_inside(int fdPipe, mail *pack) {
 
     return 0;
 }
+*/
 
+/*
 int writePack_inside(int fdPipe, mail *pack) //dentro il thArg deve essere puntato un mail
 {
     //rispetto alla versione normale invio il puntatore di mex, per cui prima lo si mallocca ,e il ricevente lo freeza
@@ -324,7 +326,7 @@ int writePack_inside(int fdPipe, mail *pack) //dentro il thArg deve essere punta
     dprintf(fdDebug, "writePack Funx send sulla pipe %d\n", fdPipe);
     return 0;
 }
-
+*/
 
 
 

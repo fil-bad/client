@@ -77,8 +77,8 @@ void printPack(mail *pack);
 void printTextPack(mail *pack); //versione con solo testo;
 
 ///Client FUNCTION
-int readPack(int fdPipe, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
-int writePack(int fdPipe, mail *pack); // ma all'interno contengono la struct mail con i dati
+int readPack_inside(int fdPipe, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
+int writePack_inside(int fdPipe, mail *pack); // ma all'interno contengono la struct mail con i dati
 
 
 int initClient(connection *c);
