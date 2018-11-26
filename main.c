@@ -148,10 +148,10 @@ int clientDemo(int argc, char *argv[]) {
     // aspetteremo che uno dei due faccia post e poi lo reinizializziamo
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
-    pthread_create(&tidRX, NULL, thUserRX, con);
+    pthread_create(&tidTX, NULL, thUserTX, con);
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
-    pthread_create(&tidTX, NULL, thUserTX, con);
+    pthread_create(&tidRX, NULL, thUserRX, con);
 
     sem_wait(&semConv); // aspetto che uno dei due finisca la sua esecuzione
 
@@ -245,20 +245,19 @@ void* thUserTX(connection *con){
         codMex++;
 
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
-        // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
-        if (TypeMex == exitRm_p) {
+
+        if (TypeMex == exitRm_p) { // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
             fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW);
             free(buff);
             break;
         }
-            // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
-        else {
+        else { // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
             fillPack(&packTX, TypeMex, strlen(buff) + 1, buff, userBuff, WorW);
         }
         insert_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy)); // vedere il value da mettere
 
         if(writePack(con->ds_sock, &packTX) == -1){
-            //todo: se c'e' un errore levo il nodo
+            delete_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy));
             break;
         }
 

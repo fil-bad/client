@@ -454,16 +454,13 @@ void printChats(table *tabChats) {
 
 conversation *startConv(mail *pack, conversation *conv) {
 
-    //char convPath[64];
-    //sprintf(convPath, "./%s", convName);
     char curDir[100];
     getcwd(curDir, 100);
     printf("try opening path = %s\nmy current directory = %s\n", convName, curDir);
 
     conv = openConf(convName);
-    //printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
-
     fflush(stdin);
+    //printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
     //char *buff;
     //retry:
@@ -777,7 +774,6 @@ int openChat(int ds_sock, mail *pack, table *tabChats) {
 
             while (i < 0) {
                 freeMex(mexBuff[i]);
-                mexBuff[i] = NULL;
                 i--;
             }
             return numEntry;
