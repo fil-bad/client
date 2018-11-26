@@ -185,7 +185,7 @@ void *thUserRX(connection *con) {
             if(entCH == ChatEntry) break; // se e' della chat esco dalla RX
             else continue;             // se e' di un'altra, continuo
         }
-        if(packRX.md.type == success_p){
+        if(packRX.md.type == messSuccess_p){
             delete_avl_node_S(avlACK, atoi(packRX.md.whoOrWhy));
             continue;
         }

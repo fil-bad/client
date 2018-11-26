@@ -30,7 +30,7 @@
 /* TIPI DI PACCHETTO*/
 
 enum typePack {
-    /** SYSTEM **/ success_p = 0, failed_p, mess_p, test_p,
+    /** SYSTEM **/ success_p = 0, failed_p, mess_p, messSuccess_p, test_p,
     /** USER**/    login_p, logout_p, delUs_p, mkUser_p, dataUs_p, kConv_p,
     /** ROOM**/    mkRoom_p, joinRm_p, openRm_p, dataRm_p, leaveRm_p, delRm_p, exitRm_p
 };
