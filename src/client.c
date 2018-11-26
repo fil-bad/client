@@ -191,7 +191,7 @@ int testConnection(int ds_sock)
     mail packTest;
     fillPack(&packTest,test_p, 0, NULL, "SERVER", "testing_code");
 
-    if (writePack_inside(ds_sock, &packTest) == -1) {
+    if (writePack(ds_sock, &packTest) == -1) {
         return -1;
     }
     printf("testpack Riuscito\n");
@@ -362,11 +362,11 @@ int loginUser(int ds_sock, mail *pack){
     if (fillPack(pack,login_p,0,NULL,UserName, UserID) == -1){ //utente e id saranno passati da scanf
         return -1;
     }
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -400,11 +400,11 @@ int registerUser(int ds_sock, mail *pack){
     if (fillPack(pack,mkUser_p,0,NULL,UserName, NULL) == -1){ //id sara' dato dal server
         return -1;
     }
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -446,6 +446,7 @@ table *initClientTable(table *tabChats, mail *pack){
     fclose(temp);
 
     tabChats = open_Tab(chatTable);
+
     return tabChats;
 }
 
@@ -538,11 +539,11 @@ int createChat(int ds_sock, mail *pack, table *tabChats){
     // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
     fillPack(pack,mkRoom_p,strlen(buff)+1,buff,UserName,UserID); //todo: vedere schema leaveChat
 
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -591,10 +592,10 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack,delRm_p,0,NULL, userBuff, newBuff);
 
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -651,10 +652,10 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack,leaveRm_p,0,NULL, userBuff, newBuff);
 
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -701,11 +702,11 @@ int joinChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack, joinRm_p, 0, NULL, UserName, buff);
 
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -752,7 +753,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
 
     fillPack(pack,openRm_p,0,NULL,userBuff,newBuff);
 
-    if (writePack_inside(ds_sock, pack) == -1){
+    if (writePack(ds_sock, pack) == -1){
         return -1;
     }
 
@@ -762,7 +763,7 @@ int openChat(int ds_sock, mail *pack, table *tabChats){
     retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 
     //Pacchetto mandato, in attesa di risposta server
-    if (readPack_inside(ds_sock, pack) == -1){
+    if (readPack(ds_sock, pack) == -1){
         return -1;
     }
 
