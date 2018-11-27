@@ -336,7 +336,7 @@ int initClient(connection *c) {
 char *obtainStr(char *buff) {
     antiSegFault:
     scanf("%m[^\n]", &buff);
-    fflush(stdin);
+    while(getchar()!='\n');
     if (buff == NULL) goto antiSegFault;
     return buff;
 }
@@ -459,7 +459,7 @@ conversation *startConv(mail *pack, conversation *conv) {
     printf("try opening path = %s\nmy current directory = %s\n", convName, curDir);
 
     conv = openConf(convName);
-    fflush(stdin);
+    //fflush(stdin);
     //printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
     //char *buff;
@@ -513,7 +513,7 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats) {
         helpChat();
         return -1;
     }
-    printf("Value = %d\n", value);
+    printf("Index Of My Tab = %d\n", value);
     return value;
 }
 
@@ -772,18 +772,21 @@ int openChat(int ds_sock, mail *pack, table *tabChats) {
             }
             fclose(temp);
 
-            while (i < 0) {
+            while (i > 0) { //if null is error
                 freeMex(mexBuff[i]);
+                mexBuff[i] = NULL;
                 i--;
             }
+            printf("Save K-conv successful\n");
             return numEntry;
             break;
 
         case mess_p: //mi e' arrivato un messaggio prima della conversazione
             mexBuff[i] = makeMexBuf(pack->md.dim, pack->mex);
-            if (!mexBuff[i]) {
-                while (i < 0) {
+            if (!mexBuff[i]) {  //if null is error
+                while (i > 0) {
                     freeMex(mexBuff[i]);
+                    mexBuff[i] = NULL;
                     i--;
                 }
             }
@@ -794,8 +797,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats) {
         case failed_p:
             printf("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
             errno = ENOMEM;
-            while (i < 0) {
+            while (i > 0) {
                 freeMex(mexBuff[i]);
+                mexBuff[i] = NULL;
                 i--;
             }
             return -1;
@@ -804,8 +808,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats) {
         case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
             printf("Open error. %s is a no-existing more chat. Deleting...\n", buff);
             delEntry(tabChats, numEntry);
-            while (i < 0) {
+            while (i > 0) {
                 freeMex(mexBuff[i]);
+                mexBuff[i] = NULL;
                 i--;
             }
             return -1;
@@ -814,8 +819,9 @@ int openChat(int ds_sock, mail *pack, table *tabChats) {
         default:
             printf("Unespected behaviour from server.\n");
             errno = EINVAL;
-            while (i < 0) {
+            while (i > 0) {
                 freeMex(mexBuff[i]);
+                mexBuff[i] = NULL;
                 i--;
             }
             return -1;

@@ -163,19 +163,23 @@ conversation *loadConvF(FILE *stream) {
     ///accedo al file e lo copio in un buffer in blocco
     flockfile(stream);
     fflush(stream);
-    struct stat streamInfo;
+
+	struct stat streamInfo;
     fstat(fileno(stream), &streamInfo);
-    if (streamInfo.st_size == 0) {
-        funlockfile(stream);
+	if (streamInfo.st_size == 0) {
+		printf ("fstat = 0\n");
+		funlockfile(stream);
+	    printf ("flock rilasciato 1\n");
         conv->head.nMex = 0;
         conv->mexList = NULL;
         return conv;
     }
     char buf[streamInfo.st_size];
-    rewind(stream);
+	rewind(stream);
     fReadF(stream, 1, streamInfo.st_size, buf);
     funlockfile(stream);
-    ///accesso eseguito inizio il compattamento dati
+
+	///accesso eseguito inizio il compattamento dati
 
     void *dataPoint;
 
