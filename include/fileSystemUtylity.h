@@ -20,7 +20,6 @@
 #include <time.h>
 #include <semaphore.h>
 
-//#include "../helpFunx.h"
 #include "../globalSet.h"
 #include "tableFile.h"
 #include "mexData.h"

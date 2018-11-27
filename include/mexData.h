@@ -19,9 +19,6 @@
 
 #include "../globalSet.h"
 
-//extern int fdOut;  //pipe di uscita per lo stdOut
-
-
 typedef struct mexInfo_ {
     int usId;
     time_t timeM;

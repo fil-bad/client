@@ -24,9 +24,6 @@
 #include "tableFile.h"
 #include "mexData.h"
 
-#define fflush(stdin) while(getchar() != '\n')
-
-
 /* TIPI DI PACCHETTO*/
 
 enum typePack {
