@@ -258,6 +258,7 @@ void* thUserTX(connection *con){
 
         if(writePack(con->ds_sock, &packTX) == -1){
             delete_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy));
+            if (errno == EPIPE) exit(-1);
             break;
         }
 
