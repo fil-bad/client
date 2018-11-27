@@ -127,11 +127,10 @@ int clientDemo(int argc, char *argv[]) {
     printf("Benvenuto nella chat %s.\n", tabChats->data[ChatEntry].name);
 
     conv = startConv(pack, conv); //scarichiamo tutta la conversazione in locale
-    if (conv == NULL){
+    if (conv == NULL) {
         printf("Conv not initialized.\n");
         return -1;
     }
-    printConv(conv, STDOUT_FILENO);
     //* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
 
     avlACK = init_avl_S();

@@ -459,15 +459,14 @@ conversation *startConv(mail *pack, conversation *conv) {
     printf("try opening path = %s\nmy current directory = %s\n", convName, curDir);
 
     conv = openConf(convName);
-    //fflush(stdin);
-    //printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
+    printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
 
-    //char *buff;
-    //retry:
-    //buff = obtainStr(buff);
-    //if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
-    //else if (strcmp(buff,"n") == 0);
-    //else goto retry;
+    char *buff;
+    retry:
+    buff = obtainStr(buff);
+    if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
+    else if (strcmp(buff,"n") == 0);
+    else goto retry;
 
     return conv;
 }
