@@ -87,7 +87,7 @@ void freeConnection(connection *con) {
 int readPack(int ds_sock, mail *pack) {
     int iterContr = 0; // vediamo se la read fallisce
 
-    printf("[ReadPack] Pack is located at %p\n", pack);
+    //printf("[ReadPack] Pack is located at %p\n", pack);
 
     ssize_t bRead = 0;
     ssize_t ret = 0;
