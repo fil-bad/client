@@ -45,7 +45,6 @@ void closeHandler(int sig){
 
 void changerType(int sig) {
     TypeMex = exitRm_p;
-    printf("TypeMex changed; press ENTER to quit from room\n");
 }
 
 int clientDemo(int argc, char *argv[]) {
@@ -178,7 +177,8 @@ void *thUserRX(connection *con) {
 
     do {
         if(readPack(con->ds_sock, &packRX) == -1){
-            break;
+            exit(-1);
+            //break;
         }
         if(packRX.md.type == delRm_p){ //potrei riceverlo di un'altra chat
 
@@ -219,7 +219,6 @@ void *thUserRX(connection *con) {
 
     sem_post(&semConv);
 
-    pause();
 }
 
 
@@ -246,12 +245,13 @@ void* thUserTX(connection *con){
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
 
         if (TypeMex == exitRm_p) { // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
+            printf("Typemex e' stato cambiato");
             fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW);
             free(buff);
             break;
         }
         else { // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
-            fillPack(&packTX, TypeMex, strlen(buff) + 1, buff, userBuff, WorW);
+            fillPack(&packTX, mess_p, strlen(buff) + 1, buff, userBuff, WorW);
         }
         insert_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy)); // vedere il value da mettere
 
@@ -286,7 +286,6 @@ void* thUserTX(connection *con){
 
     sem_post(&semConv);
 
-    pause();
 }
 
 void helpProject()
