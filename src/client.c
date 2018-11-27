@@ -11,6 +11,69 @@ extern char *UserName;
 extern char *UserID;
 extern char convName[64];
 
+
+char* typeToText(int type){
+    switch (type) {
+        case success_p:
+            return "success_p";
+            break;
+        case failed_p:
+            return "failed_p";
+            break;
+        case mess_p:
+            return "mess_p";
+            break;
+        case messSuccess_p:
+            return "messSuccess_p";
+            break;
+        case test_p:
+            return "test_p";
+            break;
+        case login_p:
+            return "login_p";
+            break;
+        case logout_p:
+            return "logout_p";
+            break;
+        case delUs_p:
+            return "delUs_p";
+            break;
+        case mkUser_p:
+            return "mkUser_p";
+            break;
+        case dataUs_p:
+            return "dataUs_p";
+            break;
+        case kConv_p:
+            return "kConv_p";
+            break;
+        case mkRoom_p:
+            return "mkRoom_p";
+            break;
+        case joinRm_p:
+            return "joinRm_p";
+            break;
+        case openRm_p:
+            return "openRm_p";
+            break;
+        case dataRm_p:
+            return "dataRm_p";
+            break;
+        case leaveRm_p:
+            return "leaveRm_p";
+            break;
+        case delRm_p:
+            return "delRm_p";
+            break;
+        case exitRm_p:
+            return "exitRm_p";
+            break;
+        default:
+            return "Not expected type";
+            break;
+    }
+}
+
 /// GLOBAL FUNCTION
 connection *initSocket(u_int16_t port, char *IP) {
     connection *con = malloc(sizeof(connection));

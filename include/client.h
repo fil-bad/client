@@ -61,6 +61,8 @@ typedef struct thConnArg_{
 
 // GLOBALI
 
+char* typeToText(int type);
+
 connection* initSocket(u_int16_t port, char* IP);
 int keepAlive(int *ds_sock);
 void freeConnection(connection* con);
