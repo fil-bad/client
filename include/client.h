@@ -82,7 +82,7 @@ int writePack_inside(int fdPipe, mail *pack); // ma all'interno contengono la st
 
 int initClient(connection *c);
 
-char *obtainStr(char *);
+char *obtainStr(char * bufOut, int len);
 
 int loginUser(int ds_sock, mail *pack);
 int registerUser(int ds_sock, mail *pack);

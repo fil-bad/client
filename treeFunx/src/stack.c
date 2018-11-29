@@ -41,9 +41,9 @@ bool push(d_stack_p stack, void *val) {
 	nodeptr->data = val;
 
 	if (add_head_dlist(stack->head, nodeptr)) /* Last In */
-		return TRUE;
-	else
 		return FALSE;
+	else
+		return TRUE;
 }
 
 /*
@@ -54,7 +54,7 @@ void *pop(d_stack_p stack) {
 	void *data = get_head_dlist(stack->head); /* First out */
 
 	if (delete_head_dlist(stack->head) == -1)
-        dprintf(fdOut, "head or first node is NULL!\n");
+        dprintf(STDERR_FILENO, "head or first node is NULL!\n");
 
 	return data;
 }

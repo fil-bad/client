@@ -282,7 +282,7 @@ bool insert_avl_node(avl_pp head, int key, int data) {
 		//if keyNod < of key to add, go left of tree
 		if (key < root->keyNode) {
 			//if left null, add node as left son
-			if (!root->left) {
+			if (!root->left) {      //se left è nullo aggiungo lì
 				/* Create an AVL node for new value */
 				root->left = calloc(1, sizeof(avl_t));
 				root->left->keyNode = key;
@@ -308,6 +308,11 @@ bool insert_avl_node(avl_pp head, int key, int data) {
 			   direction in stack as we traverse down */
 			n = malloc(sizeof(nodedata));
 			n->node = root;
+			if (!n->node)
+			{
+				dprintf(STDERR_FILENO,"[insert_avl_node] in stack push node NULL!!!\n");
+				sleep (1);
+			}
 			n->direction = LEFT;
 			push(stack, n);
 
@@ -315,7 +320,7 @@ bool insert_avl_node(avl_pp head, int key, int data) {
 			root = root->left;
 		} else {    //key to add is >= then current key node
 			//if right son null add son on it
-			if (!root->right) {
+			if (!root->right) {     //se right è nullo aggiungo lì
 				root->right = calloc(1, sizeof(avl_t));
 				root->right->keyNode = key;
 				root->right->data = data;
@@ -324,6 +329,11 @@ bool insert_avl_node(avl_pp head, int key, int data) {
 				modified = FALSE;
 
 				while ((p = pop(stack)) != NULL) {
+					if (!p->node)
+					{
+						dprintf(STDERR_FILENO,"[insert_avl_node] in stack pop p.node is NULL!!!\n");
+						sleep (1);
+					}
 					if (!modified) {
 						modified = rebalance(stack, head, p->node, key);
 					}
@@ -336,6 +346,11 @@ bool insert_avl_node(avl_pp head, int key, int data) {
 
 			n = malloc(sizeof(nodedata));
 			n->node = root;
+			if (!n->node)
+			{
+				dprintf(STDERR_FILENO,"[insert_avl_node] in stack push node NULL!!!\n");
+				sleep (1);
+			}
 			n->direction = RIGHT;
 			push(stack, n);
 

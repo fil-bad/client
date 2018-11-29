@@ -12,12 +12,8 @@
 
 connection *con;
 
-char* UserID; // UserID restituito al termine della creazione utente
-char* UserName; //Username restituito allo stesso punto
 
 int ChatEntry; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
-
-char convName[64];
 
 table *tabChats; //tabella locale delle chat
 
@@ -49,9 +45,43 @@ void changerType(int sig) {
 
 int clientDemo(int argc, char *argv[]) {
 
-    char *buff;
+	char *storage = argv[1];
 
-    con = initSocket((u_int16_t) strtol(argv[2], NULL, 10), argv[1]);
+	printf ("[1]---> Fase 1, aprire lo storage\n");
+	int errorRet;
+	errorRet = chdir (storage);                        //modifico l'attuale directory di lavoro del processo
+	if (errorRet != 0)    //un qualche errore nel ragiungimento della cartella
+	{
+		switch (errno){
+			case 2: //No such file or directory
+				printf ("directory non esistente, procedo alla creazione\n");
+				errorRet = mkdir (storage, 0777);
+				if (errorRet == -1){
+					perror ("mkdir fails");
+					return -1;
+				}
+				else{
+					printf ("New directory create\n");
+					errorRet = chdir (storage);
+					if (errorRet == -1){
+						perror ("nonostante la creazione chdir()");
+						return -1;
+					}
+				}
+				break;
+			default:
+				perror ("chdir");
+				return -1;
+		}
+	}
+	char curDirPath[100];
+	errorRet = setenv ("PWD", getcwd (curDirPath, 100), true);    //aggiorno l'env per il nuovo pwd
+
+	printf ("Current Directory set:\n-->\tgetcwd()=%s\n-->\tPWD=%s\n\n", curDirPath, getenv ("PWD"));
+	printf ("[1]---> success\n\n");
+
+    char buff[1024];
+    con = initSocket((u_int16_t) strtol(argv[3], NULL, 10), argv[2]);
 
     if (initClient(con) == -1) {
         exit(-1);
@@ -68,7 +98,8 @@ int clientDemo(int argc, char *argv[]) {
 
     printf("Please choose 'login'/'1' or 'register'/'2'\n>>> ");
 
-    buff = obtainStr(buff);
+
+    obtainStr(buff, 1024);
 
     if (strcmp(buff, "login") == 0 || strtol(buff,NULL,10) == 1) {
         if (loginUser(con->ds_sock, pack) == -1) {
@@ -107,7 +138,7 @@ int clientDemo(int argc, char *argv[]) {
            "\t'2'/'deleteChat'\t'5'/'openChat'\t\t'$e'/'exitProgram'\n"
            "\t'3'/'leaveChat'\t\t\n\n>>> ");
 
-    buff = obtainStr(buff);
+    obtainStr(buff, 1024);
 
     if ((strcmp(buff,"exitProgram") == 0 || (strcmp(buff,"$e") == 0)))
     {
@@ -199,8 +230,8 @@ void *thUserRX(connection *con) {
             printf("Unexpected pack; going to main menu...\n");
             break;
         }
-        printTextPack(&packRX);
-        //printPack(&packRX);
+        printPack(&packRX);
+        printMexBuf (packRX.mex,STDOUT_FILENO);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
         messageRX = makeMex(packRX.mex, (int)strtol(UserID,NULL,10));
@@ -224,22 +255,23 @@ void *thUserRX(connection *con) {
 
 void* thUserTX(connection *con){
 
-    char *buff;
+    char buff[1024];
     int codMex = 0;
     char WorW[wowDim];
 
     char userBuff[sendDim];
     sprintf(userBuff,"%s:%s",UserID,UserName); // UserID:UserName
-
+    userBuff[sendDim-1] = '\0';
     TypeMex = mess_p;
 
     printf("Inserire un messaggio ('$q' o CTRL+C per terminare):");
 
     do {
         printf("\n>>> ");
-        buff = obtainStr(buff); //messaggio da mandare
+        obtainStr(buff, 1024); //messaggio da mandare
 
         sprintf(WorW, "%d", codMex); //codice "univoco" per il messaggio
+        WorW[wowDim-1] = '\0';
         codMex++;
 
         if (strcmp(buff, "$q") == 0) TypeMex = exitRm_p;
@@ -247,7 +279,7 @@ void* thUserTX(connection *con){
         if (TypeMex == exitRm_p) { // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
             printf("Typemex e' stato cambiato");
             fillPack(&packTX, TypeMex, 0, NULL, userBuff, WorW);
-            free(buff);
+            //free(buff);
             break;
         }
         else { // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
@@ -256,8 +288,8 @@ void* thUserTX(connection *con){
         insert_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy)); // vedere il value da mettere
 
         if(writePack(con->ds_sock, &packTX) == -1){
-            delete_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy));
             if (errno == EPIPE) exit(-1);
+            delete_avl_node_S(avlACK, atoi(packTX.md.whoOrWhy));
             break;
         }
 
@@ -268,8 +300,8 @@ void* thUserTX(connection *con){
         }
         unlockReadSem(avlACK.semId);
 
-        printTextPack(&packTX);
-        //printPack(&packTX);
+	    printPack(&packTX);
+	    printTextPack(&packTX);
 
         /* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
         messageTX = makeMex(packTX.mex, (int)strtol(UserID,NULL,10));
@@ -291,13 +323,13 @@ void* thUserTX(connection *con){
 void helpProject()
 {
     printf("I parametri Client sono:\n");
-    printf("[IP] [port]\tMi collego al server a IP e porta specificati (IP = 127.0.0.1 in locale)\n");
+    printf("[PATH_save] [IP] [port]\tMi collego al server a IP e porta specificati (IP = 127.0.0.1 in locale)\n");
 }
 
 int main(int argc, char *argv[])
 {
 
-    if (argc == 3)
+    if (argc == 4)
     {
         if (clientDemo(argc, argv) == -1){
             return -1;

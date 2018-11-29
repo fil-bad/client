@@ -51,4 +51,11 @@ avl_pp_S rmAvlPipe;
 
 */
 
+#define lenStr 64
+
+char UserName[lenStr];
+char UserID[lenStr];
+char convName[lenStr];
+
+
 #endif //CLIENT_DEFINESETS_H

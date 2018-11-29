@@ -6,10 +6,9 @@
 #include "../include/client.h"
 #include "../include/tableFile.h"
 #include "../include/fileSystemUtylity.h"
+#include "../globalSet.h"
 
-extern char *UserName;
-extern char *UserID;
-extern char convName[64];
+
 
 
 char* typeToText(int type){
@@ -265,7 +264,7 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
     pack->md.type = type;
     pack->md.dim = (size_t) dim;
 
-    if (dim == 0)pack->mex = NULL;
+    if (dim == 0) pack->mex = NULL;
     else pack->mex = mex;
 
     if (sender == NULL) strncpy(pack->md.sender, "", sendDim);
@@ -286,7 +285,7 @@ int fillPack(mail *pack, int type, int dim, void *mex, char *sender, char *whoOr
 void printPack(mail *pack) {
     printf("######[][]I METADATI SONO[][]######\n");
     printf("Dim pack = %ld\n", pack->md.dim);
-    printf("Type = %d\n", pack->md.type);
+    printf("Type = %d[%s]\n", pack->md.type, typeToText(pack->md.type));
     printf("Sender = %s\n", pack->md.sender);
     printf("whoOrWhy = %s\n", pack->md.whoOrWhy);
     printf("------[][]IL MESSAGGIO[][]------\n");
@@ -294,7 +293,9 @@ void printPack(mail *pack) {
 }
 
 void printTextPack(mail *pack) {
-    printf("(%s):\t%s\n\n", pack->md.sender, (char *) pack->mex);
+    if (pack)
+        if (pack->mex)
+            printf("(%s):\t%s\n\n", pack->md.sender, (char *) pack->mex);
 }
 
 
@@ -396,11 +397,14 @@ int initClient(connection *c) {
     return 0;
 }
 
-char *obtainStr(char *buff) {
+char *obtainStr(char *buff, int len) {
+    char bufApp[2048];
     antiSegFault:
-    scanf("%m[^\n]", &buff);
+    scanf("%[^\n]", bufApp);
     while(getchar()!='\n');
-    if (buff == NULL) goto antiSegFault;
+    //if (buff == NULL) goto antiSegFault;
+    strncpy (buff,bufApp,len);
+    buff[len-1] = '\0';
     return buff;
 }
 
@@ -410,10 +414,10 @@ int loginUser(int ds_sock, mail *pack) {
 
     printf("Fase di Login; inserire Username ed UserID\n");
     printf("USER (max 23 caratteri) >>> ");
-    UserName = obtainStr(UserName);
+    obtainStr(UserName, lenStr);
 
     printf("\nUserID univoco >>> ");
-    UserID = obtainStr(UserID);
+    obtainStr(UserID, lenStr);
     printf("\n");
 
     if (fillPack(pack, login_p, 0, NULL, UserName, UserID) == -1) { //utente e id saranno passati da scanf
@@ -451,7 +455,7 @@ int registerUser(int ds_sock, mail *pack) {
 
     printf("Creazione Utente; inserire nuovo Username\n");
     printf("USER (max 23 caratteri) >>> ");
-    UserName = obtainStr(UserName);
+    obtainStr(UserName, lenStr);
     printf("\n");
 
     if (fillPack(pack, mkUser_p, 0, NULL, UserName, NULL) == -1) { //id sara' dato dal server
@@ -467,7 +471,7 @@ int registerUser(int ds_sock, mail *pack) {
 
     switch (pack->md.type) {
         case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
-            UserID = malloc(wowDim);
+            //UserID = malloc(wowDim);
             strcpy(UserID, pack->md.whoOrWhy); //cosi' non dovrei avere problemi con la deallocazione di pack
 
             printf("### UserID = %s ### (chiave d'accesso per successivi login)\n", UserID);
@@ -587,8 +591,8 @@ int chooseAction(char *command, connection *con, mail *pack, table *tabChats) {
 int createChat(int ds_sock, mail *pack, table *tabChats) {
     printf("Creazione nuova chat; scegliere il nome (max 23 caratteri):\n");
 
-    char *buff;
-    buff = obtainStr(buff);
+    char buff[1024];
+    obtainStr(buff, 1024);
     // va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
     fillPack(pack, mkRoom_p, strlen(buff) + 1, buff, UserName, UserID); //todo: vedere schema leaveChat
 
@@ -627,8 +631,8 @@ int deleteChat(int ds_sock, mail *pack, table *tabChats) {
 
     printf("Eliminazione chat; scegliere l'ID:\n");
 
-    char *buff;
-    buff = obtainStr(buff);
+    char buff[1024];
+    obtainStr(buff, 1024);
 
     int indexEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
     if (indexEntry == -1) {
@@ -687,8 +691,8 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats) {
     // il server elimina tutta la persistenza della chat
     printf("Leaving chat; scegliere l'ID:\n");
 
-    char *buff;
-    buff = obtainStr(buff);
+    char buff[1024];
+    obtainStr(buff, 1024);
 
     int indexEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
     if (indexEntry == -1) {
@@ -744,8 +748,8 @@ int leaveChat(int ds_sock, mail *pack, table *tabChats) {
 int joinChat(int ds_sock, mail *pack, table *tabChats) {
     printf("Join nuova chat; scrivere ID.\n<ID>: ");
 
-    char *buff;
-    buff = obtainStr(buff);
+    char buff[1024];
+    obtainStr(buff, 1024);
 
     int numEntry = searchFirstOccurrenceKey(tabChats, (int) strtol(buff, NULL, 10));
     if (numEntry != -1) {
@@ -788,8 +792,8 @@ int joinChat(int ds_sock, mail *pack, table *tabChats) {
 int openChat(int ds_sock, mail *pack, table *tabChats) {
     printf("Selezione chat esistente; scegliere il nome:\n");
 
-    char *buff;
-    buff = obtainStr(buff);
+    char buff[1024];
+    obtainStr(buff, 1024);
 
     int numEntry = searchFirstOccurrenceKey(tabChats, atoi(buff));
     if (numEntry == -1) {

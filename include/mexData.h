@@ -85,6 +85,9 @@ void printConv(conversation *c, int fdOutP);
 
 void printMex(mex *m, int fdOutP);
 
+void printMexBuf(char *m, int fdOutP);
+
+
 void printConvInfo(convInfo *cI, int fdOutP);
 
 char *timeString(time_t t);

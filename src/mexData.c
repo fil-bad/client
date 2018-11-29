@@ -308,6 +308,27 @@ void printMex(mex *m, int fdOutP) {
     }
 }
 
+void printMexBuf(char *buf, int fdOutP) {
+	/*
+	m->text
+	m->info.usId
+	m->info.timeM
+	m->next
+	 */
+	mex m;
+	memcpy (&m,buf, sizeof (mexInfo));
+	m.text = buf + sizeof (mexInfo);
+
+	dprintf(fdOutP, "Mex buf data Store locate in=%p:\n", buf);
+	dprintf(fdOutP, "info.usId\t-> %d\n", m.info.usId);
+	dprintf(fdOutP, "time Message\t-> %s", timeString(m.info.timeM));
+	if (m.text != NULL) {
+		dprintf(fdOutP, "Text:\n-->  %s\n", m.text);
+	} else {
+		dprintf(fdOutP, "Text: ##Non Presente##\n");
+	}
+}
+
 void printConvInfo(convInfo *cI, int fdOutP) {
     /*
     cI->nMex
