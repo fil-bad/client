@@ -10,7 +10,7 @@
 connection *con;
 
 
-int ChatEntry; // ID della chat nella quale scriveremo quando saremo nella fase di messaggistica
+int chatEntry; // Index della tabella dove si trova la chat nella quale scriveremo quando saremo nella fase di messaggistica
 
 table *tabChats; //tabella locale delle chat
 
@@ -38,6 +38,8 @@ void closeHandler (int sig){
 
 void changerType (int sig){
 	TypeMex = exitRm_p;
+	printf ("TypeMex cambiato in exitRm_p\n");
+
 }
 
 int clientDemo (int argc, char *argv[]){
@@ -144,14 +146,14 @@ showChat: // label che permette di re-listare tutte le chat
 		return 0;
 	}
 
-	ChatEntry = chooseAction (buff, con, pack, tabChats);
-	if (ChatEntry == -1) goto showChat;
+	chatEntry = chooseAction (buff, con, pack, tabChats);
+	if (chatEntry == -1) goto showChat;
 
 	if (!(strcmp (buff, "openChat") == 0 || strtol (buff, NULL, 10) == 5)){
 		goto showChat;
 	}
 
-	printf ("Benvenuto nella chat %s.\n", tabChats->data[ChatEntry].name);
+	printf ("Benvenuto nella chat %s.\n", tabChats->data[chatEntry].name);
 
 	conv = startConv (pack, conv); //scarichiamo tutta la conversazione in locale
 	if (conv == NULL){
@@ -213,7 +215,7 @@ void *thUserRX (connection *con){
 
 			int entCH = atoi (packRX.md.whoOrWhy);
 			delEntry (tabChats, entCH);
-			if (entCH == ChatEntry) break; // se e' della chat esco dalla RX
+			if (entCH == chatEntry) break; // se e' della chat esco dalla RX
 			else continue;             // se e' di un'altra, continuo
 		}
 		if (packRX.md.type == messSuccess_p){
@@ -242,7 +244,7 @@ void *thUserRX (connection *con){
 	while (packRX.md.type != delRm_p);
 
 	// pthread_cancel(tidTX);
-	if (packRX.md.type == delRm_p) delEntry (tabChats, ChatEntry);
+	if (packRX.md.type == delRm_p) delEntry (tabChats, chatEntry);
 
 	free (packRX.mex);
 	free (packTX.mex);
@@ -263,7 +265,7 @@ void *thUserTX (connection *con){
 	userBuff[sendDim - 1] = '\0';
 	TypeMex = mess_p;
 
-	printf ("Inserire un messaggio ('$q' o CTRL+C per terminare):");
+	printf ("Inserire un messaggio ('-q' o CTRL+C per terminare):");
 
 	do{
 		printf ("\n>>> ");
@@ -273,24 +275,27 @@ void *thUserTX (connection *con){
 		WorW[wowDim - 1] = '\0';
 		codMex++;
 
-		if (strcmp (buff, "$q") == 0) TypeMex = exitRm_p;
+		if (strcmp (buff, "-q") == 0) TypeMex = exitRm_p;
 
 		if (TypeMex == exitRm_p){ // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
-			printf ("Typemex e' stato cambiato");
-			fillPack (&packTX, TypeMex, 0, NULL, userBuff, WorW);
-			//free(buff);
+			printf ("Typemex e' stato cambiato\n");
+			fillPack (&packTX, exitRm_p, 0, NULL, userBuff, tabChats->data[chatEntry].name);
+			if (writePack (con->ds_sock, &packTX) == -1){
+				if (errno == EPIPE) exit (-1);
+			}
+			printf("Exit pack inviato\n");
 			break;
 		}
 		else{ // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
 			fillPack (&packTX, mess_p, strlen (buff) + 1, buff, userBuff, WorW);
+			insert_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy), atoi (packTX.md.whoOrWhy)); // vedere il value da mettere
+			if (writePack (con->ds_sock, &packTX) == -1){
+				if (errno == EPIPE) exit (-1);
+				delete_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy));
+				break;
+			}
 		}
-		insert_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy), atoi (packTX.md.whoOrWhy)); // vedere il value da mettere
 
-		if (writePack (con->ds_sock, &packTX) == -1){
-			if (errno == EPIPE) exit (-1);
-			delete_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy));
-			break;
-		}
 
 		lockReadSem (avlACK.semId);
 		if ((**(avlACK.avlRoot)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
@@ -314,9 +319,8 @@ void *thUserTX (connection *con){
 
 	// pthread_cancel(tidRX);
 
-	free (packTX.mex);
-	free (packRX.mex);
-
+	if (packTX.mex) free (packTX.mex);
+	if (packTX.mex) free (packRX.mex);
 	sem_post (&semConv);
 
 }
