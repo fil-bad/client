@@ -7,29 +7,20 @@
 #include "include/fileSystemUtylity.h"
 #include "treeFunx/include/avl.h"
 
-connection *con;
-
-
-int chatEntry; // Index della tabella dove si trova la chat nella quale scriveremo quando saremo nella fase di messaggistica
-
-table *tabChats; //tabella locale delle chat
-
-conversation *conv;
-
-mail packRX;
-mail packTX;
 pthread_t tidRX, tidTX;
 
+connection *con;
+mail packRX, packTX;
+
+table *tabChats; //tabella locale delle chat
+int chatEntry; // Index della tabella dove si trova la chat nella quale scriveremo quando saremo nella fase di messaggistica
+conversation *conv;
 sem_t semConv;
 
 avl_pp_S avlACK; // verranno messi i vessaggi in attesa di una risposta;
-// se l'albero sara' verra' solo segnalato
-
-mex *messageTX;
-mex *messageRX;
+mex *messageTX, *messageRX;
 
 int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
-
 
 void closeHandler (int sig){
 	close (con->ds_sock);
@@ -38,14 +29,12 @@ void closeHandler (int sig){
 
 void changerType (int sig){
 	TypeMex = exitRm_p;
-	printf ("TypeMex cambiato in exitRm_p\n");
+	printf ("To Exit from Room now click ENTER\n");
 
 }
 
 int clientDemo (int argc, char *argv[]){
-
 	char *storage = argv[1];
-
 	printf ("[1]---> Fase 1, aprire lo storage\n");
 	int errorRet;
 	errorRet = chdir (storage);                        //modifico l'attuale directory di lavoro del processo
@@ -87,16 +76,12 @@ int clientDemo (int argc, char *argv[]){
 	}
 	signal (SIGINT, closeHandler); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
 
-
 	printf ("Connection with server done. ");
 	mail *pack = malloc (sizeof (mail));
 
 	/** PARTE LOGIN O CREATE **/
-
 retry:
-
 	printf ("Please choose 'login'/'1' or 'register'/'2'\n>>> ");
-
 
 	obtainStr (buff, 1024);
 
@@ -127,7 +112,6 @@ retry:
 	printf ("\nWelcome. ");
 
 showChat: // label che permette di re-listare tutte le chat
-
 	signal (SIGINT, closeHandler); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
 
 	printf ("You can talk over following chat:\n");
@@ -165,10 +149,7 @@ showChat: // label che permette di re-listare tutte le chat
 	avlACK = init_avl_S ();
 	printf ("Avl initialized.\n");
 
-
 	printf ("Entro nella room...\n");
-
-	signal (SIGINT, SIG_DFL); // PER AIUTARE A GESTIRE LATO SERVER LA CHIUSURA INCONTROLLATA
 
 	signal (SIGINT, changerType); //inizio a gestire i l'handler per l'uscita di messaggio
 
@@ -191,7 +172,6 @@ showChat: // label che permette di re-listare tutte le chat
 	pthread_join (tidTX, &resTX);
 
 	// Elimino l'avl della conversazione, non piu' necessario
-
 	destroy_avl (avlACK.avlRoot);
 
 	signal (SIGINT, SIG_DFL);
@@ -199,16 +179,13 @@ showChat: // label che permette di re-listare tutte le chat
 	goto showChat;
 }
 
-
 void *thUserRX (connection *con){
-
 	do{
 		if (readPack (con->ds_sock, &packRX) == -1){
 			exit (-1);
 			//break;
 		}
 		if (packRX.md.type == delRm_p){ //potrei riceverlo di un'altra chat
-
 			int entCH = atoi (packRX.md.whoOrWhy);
 			delEntry (tabChats, entCH);
 			if (entCH == chatEntry) break; // se e' della chat esco dalla RX
@@ -226,29 +203,27 @@ void *thUserRX (connection *con){
 			printf ("Unexpected pack; going to main menu...\n");
 			break;
 		}
-		printPack (&packRX);
-		printMexBuf (packRX.mex, STDOUT_FILENO);
 
+		/*printPack (&packRX);
+		printMexBuf (packRX.mex, STDOUT_FILENO);
+		*/
 		/* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
 		messageRX = makeMex (packRX.mex, (int)strtol (UserID, NULL, 10));
 		if (addMex (conv, messageRX) == -1){
 			printf ("Error writing mex on conv in RX.\n");
 			break;
 		}
-
 	}
 	while (packRX.md.type != delRm_p);
 
-	// pthread_cancel(tidTX);
 	if (packRX.md.type == delRm_p) delEntry (tabChats, chatEntry);
 
 	free (packRX.mex);
 	free (packTX.mex);
 
 	sem_post (&semConv);
-
+	return NULL;
 }
-
 
 void *thUserTX (connection *con){
 
@@ -274,7 +249,6 @@ void *thUserTX (connection *con){
 		if (strcmp (buff, "-q") == 0) TypeMex = exitRm_p;
 
 		if (TypeMex == exitRm_p){ // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
-			printf ("Typemex e' stato cambiato\n");
 			fillPack (&packTX, exitRm_p, 0, NULL, userBuff, tabChats->data[chatEntry].name);
 			if (writePack (con->ds_sock, &packTX) == -1){
 				if (errno == EPIPE) exit (-1);
@@ -284,14 +258,14 @@ void *thUserTX (connection *con){
 		}
 		else{ // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
 			fillPack (&packTX, mess_p, strlen (buff) + 1, buff, userBuff, WorW);
-			insert_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy), atoi (packTX.md.whoOrWhy)); // vedere il value da mettere
+			insert_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy),
+			                   atoi (packTX.md.whoOrWhy)); // vedere il value da mettere
 			if (writePack (con->ds_sock, &packTX) == -1){
 				if (errno == EPIPE) exit (-1);
 				delete_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy));
 				break;
 			}
 		}
-
 
 		lockReadSem (avlACK.semId);
 		if ((**(avlACK.avlRoot)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
@@ -300,20 +274,18 @@ void *thUserTX (connection *con){
 			sleep (5);
 		}
 		unlockReadSem (avlACK.semId);
-
+		/*
 		printPack (&packTX);
 		printTextPack (&packTX);
-
+		*/
 		/* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
 		messageTX = makeMex (packTX.mex, (int)strtol (UserID, NULL, 10));
 		if (addMex (conv, messageTX) == -1){
 			printf ("Error writing mex on conv in TX.\n");
 			break;
 		}
-
-	}while (packTX.md.type != exitRm_p);
-
-	// pthread_cancel(tidRX);
+	}
+	while (packTX.md.type != exitRm_p);
 
 	if (packTX.mex) free (packTX.mex);
 	if (packTX.mex) free (packRX.mex);

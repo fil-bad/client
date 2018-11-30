@@ -521,26 +521,14 @@ void printChats (table *tabChats){
 }
 
 conversation *startConv (mail *pack, conversation *conv){
-
-	char curDir[100];
-	getcwd (curDir, 100);
-	printf ("try opening path = %s\nmy current directory = %s\n", convName, curDir);
-
 	conv = openConf (convName);
-	//printf("The entire chat conversation has been received; would you print it? (y/n)\n>>> ");
+	printf("The entire chat conversation has been received;\nWould you print it? (y/N)\n>>> ");
 
-	//char *buff;
-	//retry:
-	//buff = obtainStr(buff);
-	//if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
-	//else if (strcmp(buff,"n") == 0);
-	//else goto retry;
-
-	printConv (conv, STDOUT_FILENO);
-
+	char buff[16];
+	obtainStr(buff, 16);
+	if (strcmp(buff, "y") == 0) printConv(conv, STDOUT_FILENO);
 	return conv;
 }
-
 
 /* #### SCELTA AZIONI ####*/
 
@@ -592,7 +580,6 @@ int chooseAction (char *command, connection *con, mail *pack, table *tabChats){
 	return value;
 }
 
-
 /* ##### AZIONI DELLE SCELTE SELEZIONATE ##### */
 
 int createChat (int ds_sock, mail *pack, table *tabChats){
@@ -610,7 +597,6 @@ int createChat (int ds_sock, mail *pack, table *tabChats){
 	if (readPack (ds_sock, pack) == -1){
 		return -1;
 	}
-
 	switch (pack->md.type){
 		case success_p:
 			// (anche vuota, dove scrivere le chat)
@@ -635,7 +621,6 @@ int createChat (int ds_sock, mail *pack, table *tabChats){
 
 int deleteChat (int ds_sock, mail *pack, table *tabChats){
 	//possibile solo se l'utente e' ADMIN di tale chat
-
 	printf ("Eliminazione chat; scegliere l'ID:\n");
 
 	char buff[1024];
@@ -653,16 +638,17 @@ int deleteChat (int ds_sock, mail *pack, table *tabChats){
 	char userBuff[sendDim];
 	sprintf (userBuff, "%s:%s", UserID, UserName); // UserID:UserName
 
-
 	fillPack (pack, delRm_p, 0, NULL, userBuff, newBuff);
 
 	if (writePack (ds_sock, pack) == -1){
 		return -1;
 	}
+
+	/*============================== Wait Server Pack ==============================*/
+
 	if (readPack (ds_sock, pack) == -1){
 		return -1;
 	}
-
 	switch (pack->md.type){
 		case success_p:
 			// (anche vuota, dove scrivere le chat)
@@ -719,10 +705,12 @@ int leaveChat (int ds_sock, mail *pack, table *tabChats){
 	if (writePack (ds_sock, pack) == -1){
 		return -1;
 	}
+
+	/*============================== Wait Server Pack ==============================*/
+
 	if (readPack (ds_sock, pack) == -1){
 		return -1;
 	}
-
 	switch (pack->md.type){
 		case success_p:
 			// (anche vuota, dove scrivere le chat)
@@ -769,11 +757,12 @@ int joinChat (int ds_sock, mail *pack, table *tabChats){
 	if (writePack (ds_sock, pack) == -1){
 		return -1;
 	}
-	//Pacchetto mandato, in attesa di risposta server
+
+	/*============================== Wait Server Pack ==============================*/
+
 	if (readPack (ds_sock, pack) == -1){
 		return -1;
 	}
-
 	switch (pack->md.type){
 		case dataRm_p:
 			printf ("Join effettuato\n");
@@ -820,21 +809,18 @@ int openChat (int ds_sock, mail *pack, table *tabChats){
 		return -1;
 	}
 
+	/*============================== Wait Server Pack ==============================*/
+
 	int i = 0;
 	mex *mexBuff[4096];
-
 retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
-
-	//Pacchetto mandato, in attesa di risposta server
 	if (readPack (ds_sock, pack) == -1){
 		return -1;
 	}
-
 	switch (pack->md.type){
 		case kConv_p:
 			// (anche vuota, dove scrivere le chat)
 			printf ("Open successful\n");
-			printPack (pack);
 			sprintf (convName, "convList_%s.conv", pack->md.whoOrWhy); // in WoW il nome della room
 
 			FILE *temp = fopen (convName, "w+");
