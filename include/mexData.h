@@ -8,6 +8,7 @@
 #ifndef MEXDAT_DEMO_MEXDATA_H
 #define MEXDAT_DEMO_MEXDATA_H
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -19,27 +20,27 @@
 
 #include "../globalSet.h"
 
-typedef struct mexInfo_ {
-    int usId;
-    time_t timeM;
+typedef struct mexInfo_{
+	int usId;
+	time_t timeM;
 } mexInfo;
 
-typedef struct mex_ {
-    mexInfo info;
-    char *text;
+typedef struct mex_{
+	mexInfo info;
+	char *text;
 } mex;
 
-typedef struct convInfo_ {
-    int nMex;
-    time_t timeCreate;
-    int adminId;
+typedef struct convInfo_{
+	int nMex;
+	time_t timeCreate;
+	int adminId;
 } convInfo;
 
 
-typedef struct conversation_ {
-    convInfo head;
-    mex **mexList;      //per permettere un add più semplice e variabile è gestita a liste
-    FILE *stream;
+typedef struct conversation_{
+	convInfo head;
+	mex **mexList;      //per permettere un add più semplice e variabile è gestita a liste
+	FILE *stream;
 } conversation;
 
 
@@ -47,50 +48,50 @@ typedef struct conversation_ {
 
 ///Funzioni di interfaccia
 
-conversation *initConv(char *path, int adminId);
+conversation *initConv (char *path, int adminId);
 
-FILE *openConfStream(char *path);
+FILE *openConfStream (char *path);
 
-conversation *openConf(char *convPath);
+conversation *openConf (char *convPath);
 
-int addMex(conversation *conversation, mex *message);
+int addMex (conversation *conversation, mex *message);
 
-mex *makeMex(char *text, int usId);
+mex *makeMex (char *text, int usId);
 
-mex *makeMexBuf(size_t len, char *bufMex);
+mex *makeMexBuf (size_t len, char *bufMex);
 
-int freeConv(conversation *c);
+int freeConv (conversation *c);
 
 
 ///Funzioni verso File
-int setUpConvF(int adminId, FILE *stream);
+int setUpConvF (int adminId, FILE *stream);
 
-int overrideHeadF(convInfo *cI, FILE *stream);
+int overrideHeadF (convInfo *cI, FILE *stream);
 
-int saveNewMexF(mex *m, FILE *stream);
+int saveNewMexF (mex *m, FILE *stream);
 
-conversation *loadConvF(FILE *stream);
+conversation *loadConvF (FILE *stream);
 
 ///Funzioni di supporto
-int fWriteF(FILE *stream, size_t sizeElem, int nelem, void *data);
+int fWriteF (FILE *stream, size_t sizeElem, int nelem, void *data);
 
-int fReadF(FILE *stream, size_t sizeElem, int nelem, void *save);
+int fReadF (FILE *stream, size_t sizeElem, int nelem, void *save);
 
-int freeMex(mex *m);
+int freeMex (mex *m);
 
-time_t currTimeSys();
+time_t currTimeSys ();
 
 ///Funzioni di visualizzazione
-void printConv(conversation *c, int fdOutP);
+void printConv (conversation *c, int fdOutP);
 
-void printMex(mex *m, int fdOutP);
+void printMex (mex *m, int fdOutP);
 
-void printMexBuf(char *m, int fdOutP);
+void printMexBuf (char *m, int fdOutP);
 
 
-void printConvInfo(convInfo *cI, int fdOutP);
+void printConvInfo (convInfo *cI, int fdOutP);
 
-char *timeString(time_t t);
+char *timeString (time_t t);
 
 
 #endif //MEXDAT_DEMO_MEXDATA_H
