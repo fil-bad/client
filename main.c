@@ -185,14 +185,10 @@ showChat: // label che permette di re-listare tutte le chat
 
 	void *resRX, *resTX;
 
-	do{ //devo ciclare perche' non e' detto che il CANCEL avvenga subito
-
-		pthread_cancel (tidRX);
-		pthread_cancel (tidTX);
-		pthread_join (tidRX, &resRX);
-		pthread_join (tidTX, &resTX);
-	}
-	while (resRX == PTHREAD_CANCELED || resTX == PTHREAD_CANCELED);
+	pthread_cancel (tidRX);
+	pthread_cancel (tidTX);
+	pthread_join (tidRX, &resRX);
+	pthread_join (tidTX, &resTX);
 
 	// Elimino l'avl della conversazione, non piu' necessario
 
@@ -283,7 +279,7 @@ void *thUserTX (connection *con){
 			if (writePack (con->ds_sock, &packTX) == -1){
 				if (errno == EPIPE) exit (-1);
 			}
-			printf("Exit pack inviato\n");
+			printf ("Exit pack inviato\n");
 			break;
 		}
 		else{ // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
@@ -314,15 +310,15 @@ void *thUserTX (connection *con){
 			printf ("Error writing mex on conv in TX.\n");
 			break;
 		}
-	}
-	while (packTX.md.type != exitRm_p);
+
+	}while (packTX.md.type != exitRm_p);
 
 	// pthread_cancel(tidRX);
 
 	if (packTX.mex) free (packTX.mex);
 	if (packTX.mex) free (packRX.mex);
 	sem_post (&semConv);
-
+	return NULL;
 }
 
 void helpProject (){
