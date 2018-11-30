@@ -75,7 +75,7 @@ int clientDemo(int argc, char *argv[]) {
 		}
 	}
 	char curDirPath[100];
-	errorRet = setenv ("PWD", getcwd (curDirPath, 100), true);    //aggiorno l'env per il nuovo pwd
+	setenv ("PWD", getcwd (curDirPath, 100), true);    //aggiorno l'env per il nuovo pwd
 
 	printf ("Current Directory set:\n-->\tgetcwd()=%s\n-->\tPWD=%s\n\n", curDirPath, getenv ("PWD"));
 	printf ("[1]---> success\n\n");
