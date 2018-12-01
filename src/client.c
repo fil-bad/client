@@ -11,61 +11,42 @@ char *typeToText (int type){
 	switch (type){
 		case success_p:
 			return "success_p";
-			break;
 		case failed_p:
 			return "failed_p";
-			break;
 		case mess_p:
 			return "mess_p";
-			break;
 		case messSuccess_p:
 			return "messSuccess_p";
-			break;
 		case test_p:
 			return "test_p";
-			break;
 		case login_p:
 			return "login_p";
-			break;
 		case logout_p:
 			return "logout_p";
-			break;
 		case delUs_p:
 			return "delUs_p";
-			break;
 		case mkUser_p:
 			return "mkUser_p";
-			break;
 		case dataUs_p:
 			return "dataUs_p";
-			break;
 		case kConv_p:
 			return "kConv_p";
-			break;
 		case mkRoom_p:
 			return "mkRoom_p";
-			break;
 		case joinRm_p:
 			return "joinRm_p";
-			break;
 		case openRm_p:
 			return "openRm_p";
-			break;
 		case dataRm_p:
 			return "dataRm_p";
-			break;
 		case leaveRm_p:
 			return "leaveRm_p";
-			break;
 		case delRm_p:
 			return "delRm_p";
-			break;
 		case exitRm_p:
 			return "exitRm_p";
-			break;
 		default:
 			return "Not expected type";
-			break;
 	}
 }
 
@@ -144,13 +125,11 @@ void freeConnection (connection *con){
 }
 
 int readPack (int ds_sock, mail *pack){
+
 	int iterContr = 0; // vediamo se la read fallisce
-
-	//printf("[ReadPack] Pack is located at %p\n", pack);
-
 	ssize_t bRead = 0;
 	ssize_t ret = 0;
-	//dprintf(STDERR_FILENO, "readPack\n");
+
 	do{
 		ret = read (ds_sock, &pack->md + bRead, sizeof (metadata) - bRead);
 		if (ret == -1){
@@ -170,7 +149,14 @@ int readPack (int ds_sock, mail *pack){
 	}
 	while (sizeof (metadata) - bRead != 0);
 
-	size_t dimMex = pack->md.dim;
+	//** Modifica per il network order**//
+
+	pack->md.type = ntohl((u_int32_t)pack->md.type);
+	pack->md.dim = ntohl((u_int32_t)pack->md.dim);
+
+	size_t dimMex = pack->md.dim; // manteniamo in ordine della macchina il valore del messaggio
+
+	//****//
 
 	if (dimMex == 0){
 		pack->mex = NULL;
@@ -206,6 +192,15 @@ int readPack (int ds_sock, mail *pack){
 
 int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un mail
 {
+    //** Modifica per il network order**//
+
+    size_t dimMex = pack->md.dim; // manteniamo in ordine della macchina il valore del messaggio
+
+    pack->md.type = htonl((u_int32_t)pack->md.type);
+    pack->md.dim = htonl((u_int32_t)pack->md.dim);
+
+    //****//
+
 	/// la funzione si aspetta che il buffer non sia modificato durante l'invio
 	ssize_t bWrite = 0;
 	ssize_t ret = 0;
@@ -227,7 +222,7 @@ int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un
 	bWrite = 0;
 
 	do{
-		ret = send (ds_sock, pack->mex + bWrite, pack->md.dim - bWrite, MSG_NOSIGNAL);
+		ret = send (ds_sock, pack->mex + bWrite, dimMex - bWrite, MSG_NOSIGNAL);
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 2\n");
@@ -238,7 +233,7 @@ int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un
 		bWrite += ret;
 
 	}
-	while (pack->md.dim - bWrite != 0);
+	while (dimMex - bWrite != 0);
 
 	return 0;
 }
@@ -303,89 +298,6 @@ void printTextPack (mail *pack){
 
 
 ///         ### Client FUNCTION ###
-/*
-int readPack_inside(int fdPipe, mail *pack) {
-    //rispetto alla versione normale ricevo il puntatore di mex, per cui prima è stato malloccato,e ora il ricevente lo freezerà
-
-    //se mex è presente DEVE essere Freezato fuori
-
-    int iterContr = 0; // vediamo se la read fallisce
-    ssize_t bRead = 0;
-    ssize_t ret = 0;
-    dprintf(fdDebug, "readPack Funx\n");
-
-    sigset_t newSet, oldSet;
-    sigfillset(&newSet);
-    pthread_sigmask(SIG_SETMASK, &newSet, &oldSet);
-
-    int iterazione = 0;
-    do {
-        dprintf(fdDebug, "readPack Funx [%d] e leggo dalla pipe %d\n", iterazione, fdPipe);
-        iterazione++;
-        ret = read(fdPipe, pack + bRead, sizeof(mail) - bRead);
-        if (ret == -1) {
-            perror("Read error; cause:");
-            return -1;
-        }
-        if (ret == 0) {
-            iterContr++;
-            if (iterContr > 4) {
-                dprintf(STDERR_FILENO, "Seems Read can't go further; test connection... [%d]\n", iterContr);
-                if (testConnection(fdPipe) == -1) {
-                    dprintf(STDERR_FILENO, "test Fail\n");
-                    return -1;
-                } else {
-                    iterContr = 0;
-                }
-            }
-        } else {
-            iterContr = 0;
-        }
-        bRead += ret;
-    } while (sizeof(mail) - bRead != 0);
-
-    pthread_sigmask(SIG_SETMASK, &oldSet, &newSet);   //restora tutto
-
-    return 0;
-}
-*/
-
-/*
-int writePack_inside(int fdPipe, mail *pack) //dentro il thArg deve essere puntato un mail
-{
-    //rispetto alla versione normale invio il puntatore di mex, per cui prima lo si mallocca ,e il ricevente lo freeza
-    /// la funzione si aspetta che il buffer non sia modificato durante l'invio
-    ssize_t bWrite = 0;
-    ssize_t ret = 0;
-    int iterazione = 0;
-
-    sigset_t newSet, oldSet;
-    sigfillset(&newSet);
-    pthread_sigmask(SIG_SETMASK, &newSet, &oldSet);
-    do {
-        dprintf(fdDebug, "writePack Funx [%d] e scrivo sulla pipe %d\n", iterazione, fdPipe);
-        iterazione++;
-        ret = write(fdPipe, pack + bWrite, sizeof(mail) - bWrite); //original
-        if (ret == -1) {
-            switch (errno) {
-                case EPIPE:
-                    dprintf(STDERR_FILENO, "writePack pipe break 1\n");
-                    return -1;
-                    //GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
-                default:
-                    perror("writePack take error:\n");
-                    return -1;
-                    break;
-            }
-        }
-        bWrite += ret;
-
-    } while (sizeof(mail) - bWrite != 0);
-    pthread_sigmask(SIG_SETMASK, &oldSet, &newSet);   //restora tutto
-    dprintf(fdDebug, "writePack Funx send sulla pipe %d\n", fdPipe);
-    return 0;
-}
-*/
 
 
 
@@ -436,18 +348,18 @@ rescue: //risolvere consistenza stringhe
 		case dataUs_p: // otteniamo sempre una tabella (anche vuota, dove scrivere le chat)
 			printf ("Login effettuato come %s, %s\n", UserID, UserName);
 			return 0;
-			break;
+
 
 		case failed_p:
 			printf ("Login non effettuato\nServer Report: %s\n", pack->md.whoOrWhy);
 			errno = ENOMEM;
 			return -1;
-			break;
+
 		default:
 			printf ("Unespected behaviour from server.\n");
 			errno = EINVAL;
 			return -1;
-			break;
+
 	}
 	return 0;
 }
@@ -478,18 +390,18 @@ int registerUser (int ds_sock, mail *pack){
 			printf ("### UserID = %s ### (chiave d'accesso per successivi login)\n", UserID);
 			int id = (int)strtol (pack->md.whoOrWhy, NULL, 10);
 			return id;
-			break;
+
 
 		case failed_p:
 			printf ("Creazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
 			errno = ENOMEM;
 			return -1;
-			break;
+
 		default:
 			printf ("Unespected behaviour from server.\n");
 			errno = EINVAL;
 			return -1;
-			break;
+
 	}
 	return 0;
 }
@@ -588,7 +500,7 @@ int createChat (int ds_sock, mail *pack, table *tabChats){
 	char buff[1024];
 	obtainStr (buff, 1024);
 	// va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
-	fillPack (pack, mkRoom_p, strlen (buff) + 1, buff, UserName, UserID); //todo: vedere schema leaveChat
+	fillPack (pack, mkRoom_p, strlen (buff) + 1, buff, UserName, UserID);
 
 	if (writePack (ds_sock, pack) == -1){
 		return -1;
@@ -603,18 +515,18 @@ int createChat (int ds_sock, mail *pack, table *tabChats){
 			printf ("Creazione effettuata\n<Id>:<Nome_Room> = %s\n", pack->md.whoOrWhy);
 			addEntry (tabChats, pack->md.whoOrWhy, 0);
 			return searchFirstOccurrence (tabChats, pack->md.whoOrWhy);
-			break;
+
 
 		case failed_p:
 			printf ("Creazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
 			errno = ENOMEM;
 			return -1;
-			break;
+
 		default:
 			printf ("Unespected behaviour from server.\n");
 			errno = EINVAL;
 			return -1;
-			break;
+
 	}
 	return 0;
 }
@@ -655,26 +567,26 @@ int deleteChat (int ds_sock, mail *pack, table *tabChats){
 			printf ("Eliminazione effettuata\n<Id>:<Nome_Room> = %s\n", pack->md.whoOrWhy);
 			delEntry (tabChats, indexEntry);
 			return 0;
-			break;
+
 
 		case delRm_p:
 			printf ("Eliminazione gia' effettuata da qualcuno.\nServer Report: %s\n", pack->md.whoOrWhy);
 			delEntry (tabChats, indexEntry);
 			errno = EINVAL;
 			return -1;
-			break;
+
 
 		case failed_p:
 			printf ("Eliminazione non effettuata\nServer Report: %s\n", pack->md.whoOrWhy);
 			errno = ENOMEM;
 			return -1;
-			break;
+
 
 		default:
 			printf ("Unespected behaviour from server.\n");
 			errno = EINVAL;
 			return -1;
-			break;
+
 	}
 	return 0;
 }
@@ -717,25 +629,25 @@ int leaveChat (int ds_sock, mail *pack, table *tabChats){
 			printf ("Leave riuscito\n");
 			delEntry (tabChats, indexEntry);
 			return 0;
-			break;
+
 
 		case delRm_p:
 			printf ("Eliminazione gia' effettuata da qualcuno.\nServer Report: %s\n", pack->md.whoOrWhy);
 			delEntry (tabChats, indexEntry);
 			errno = EINVAL;
 			return -1;
-			break;
+
 
 		case failed_p:
 			printf ("Leave non effettuato\nServer Report: %s\n", pack->md.whoOrWhy);
 			errno = ENOMEM;
 			return -1;
-			break;
+
 		default:
 			printf ("Unespected behaviour from server.\n");
 			errno = EINVAL;
 			return -1;
-			break;
+
 	}
 	return 0;
 }
@@ -769,18 +681,18 @@ int joinChat (int ds_sock, mail *pack, table *tabChats){
 			entry *newChat = (entry *)pack->mex;
 			addEntry (tabChats, newChat->name, newChat->point);
 			return 0;
-			break;
+
 
 		case failed_p:
 			printf ("Join non effettuato\nServer Report: %s\n", pack->md.whoOrWhy);
 			errno = ENOMEM;
 			return -1;
-			break;
+
 		default:
 			printf ("Unespected behaviour from server.\n");
 			errno = EINVAL;
 			return -1;
-			break;
+
 	}
 	return 0;
 }
@@ -840,7 +752,7 @@ retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 			}
 			printf ("Save K-conv successful\n");
 			return numEntry;
-			break;
+
 
 		case mess_p: //mi e' arrivato un messaggio prima della conversazione
 			mexBuff[i] = makeMexBuf (pack->md.dim, pack->mex);
@@ -853,7 +765,7 @@ retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 			}
 			i++;
 			goto retry;
-			break;
+
 
 		case failed_p:
 			printf ("Open error.\nServer Report: %s\n", pack->md.whoOrWhy);
@@ -864,7 +776,7 @@ retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 				i--;
 			}
 			return -1;
-			break;
+
 
 		case delRm_p: //La chat e' stata cancellata e non e' piu' esistente
 			printf ("Open error. %s is a no-existing more chat. Deleting...\n", buff);
@@ -875,7 +787,7 @@ retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 				i--;
 			}
 			return -1;
-			break;
+
 
 		default:
 			printf ("Unespected behaviour from server.\n");
@@ -886,7 +798,7 @@ retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 				i--;
 			}
 			return -1;
-			break;
+
 	}
 	return 0;
 }

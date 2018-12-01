@@ -127,8 +127,6 @@ void nameListPrint (nameList *nameList);
 void infoChatPrint (infoChat *info);
 
 
-//todo freeInfoUser
-
 #endif //CLIENT_FILESYSTEMUTYLITY_H
 
 

@@ -75,7 +75,6 @@ infoChat *newRoom (char *name, int adminUs){
 			default:
 				perror ("makeDir chat take error :");
 				return NULL;
-				break;
 		}
 	}
 	///se arrivo qui sicuramente la cartella non esisteva e posso procedere tranquillamente
@@ -108,7 +107,6 @@ infoChat *openRoom (char *pathDir){
 		return info;
 	}
 
-	//todo verificare creazione del file temporaneo
 	char tempFile[128];
 	sprintf (tempFile, "%s%s", pathDir, "/temp");
 	info->fdTemp = lockDirFile (tempFile);
@@ -151,7 +149,6 @@ infoUser *newUser (char *name){
 			default:
 				perror ("makeDir chat take error :");
 				return NULL;
-				break;
 		}
 	}
 	///se arrivo qui sicuramente la cartella non esisteva e posso procedere tranquillamente
@@ -192,7 +189,6 @@ int lockDirFile (char *pathDir){
 			case EEXIST:
 				fprintf (stderr, "Thread chat just online\n");
 				return -1;
-				break;
 			default:
 				fprintf (stderr, "pathDir=%s\n", pathDir);
 				perror ("errore in creazione del file lock temporaneo :");
