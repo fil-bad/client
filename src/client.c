@@ -194,14 +194,14 @@ int readPack (int ds_sock, mail *pack){
     return 0;
 }
 
-int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un mail
+int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un mail
 {
     //** Modifica per il network order**//
 
-    size_t dimMex = pack->md.dim; // manteniamo in ordine della macchina il valore del messaggio
+    size_t dimMex = pack.md.dim; // manteniamo in ordine della macchina il valore del messaggio
 
-    pack->md.type = htonl((u_int32_t)pack->md.type);
-    pack->md.dim = htonl((u_int32_t)pack->md.dim);
+    pack.md.type = htonl((u_int32_t)pack.md.type);
+    pack.md.dim = htonl((u_int32_t)pack.md.dim);
 
     //****//
 
@@ -214,7 +214,7 @@ int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un
     pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
 
 	do{
-		ret = send (ds_sock, pack + bWrite, sizeof (metadata) - bWrite, MSG_NOSIGNAL);
+		ret = send (ds_sock, &pack + bWrite, sizeof (metadata) - bWrite, MSG_NOSIGNAL);
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 1\n");
@@ -230,7 +230,7 @@ int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un
 	bWrite = 0;
 
 	do{
-		ret = send (ds_sock, pack->mex + bWrite, dimMex - bWrite, MSG_NOSIGNAL);
+		ret = send (ds_sock, pack.mex + bWrite, dimMex - bWrite, MSG_NOSIGNAL);
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 2\n");
@@ -252,7 +252,7 @@ int testConnection (int ds_sock){
 	mail packTest;
 	fillPack (&packTest, test_p, 0, NULL, "SERVER", "testing_code");
 
-	if (writePack (ds_sock, &packTest) == -1){
+	if (writePack (ds_sock, packTest) == -1){
 		return -1;
 	}
 	printf ("testpack Riuscito\n");
@@ -344,7 +344,7 @@ rescue: //risolvere consistenza stringhe
 	if (fillPack (pack, login_p, 0, NULL, UserName, UserID) == -1){ //utente e id saranno passati da scanf
 		return -1;
 	}
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 	//Pacchetto mandato, in attesa di risposta server
@@ -382,7 +382,7 @@ int registerUser (int ds_sock, mail *pack){
 	if (fillPack (pack, mkUser_p, 0, NULL, UserName, NULL) == -1){ //id sara' dato dal server
 		return -1;
 	}
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 	//Pacchetto mandato, in attesa di risposta server
@@ -510,7 +510,7 @@ int createChat (int ds_sock, mail *pack, table *tabChats){
 	// va in mex il nome della chat perche' lato server l'id serve a definire l'amministratore della chat
 	fillPack (pack, mkRoom_p, strlen (buff) + 1, buff, UserName, UserID);
 
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 	//Pacchetto mandato, in attesa di risposta server
@@ -560,7 +560,7 @@ int deleteChat (int ds_sock, mail *pack, table *tabChats){
 
 	fillPack (pack, delRm_p, 0, NULL, userBuff, newBuff);
 
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 
@@ -622,7 +622,7 @@ int leaveChat (int ds_sock, mail *pack, table *tabChats){
 
 	fillPack (pack, leaveRm_p, 0, NULL, userBuff, newBuff);
 
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 
@@ -674,7 +674,7 @@ int joinChat (int ds_sock, mail *pack, table *tabChats){
 
 	fillPack (pack, joinRm_p, 0, NULL, UserName, buff);
 
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 
@@ -725,7 +725,7 @@ int openChat (int ds_sock, mail *pack, table *tabChats){
 
 	fillPack (pack, openRm_p, 0, NULL, userBuff, newBuff);
 
-	if (writePack (ds_sock, pack) == -1){
+	if (writePack (ds_sock, *pack) == -1){
 		return -1;
 	}
 

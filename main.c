@@ -250,7 +250,7 @@ void *thUserTX (connection *con){
 
 		if (TypeMex == exitRm_p){ // nel caso volessimo uscire NON mandiamo il messaggio attualmente in scrittura
 			fillPack (&packTX, exitRm_p, 0, NULL, userBuff, tabChats->data[chatEntry].name);
-			if (writePack (con->ds_sock, &packTX) == -1){
+			if (writePack (con->ds_sock, packTX) == -1){
 				if (errno == EPIPE) exit (-1);
 			}
 			printf ("Exit pack inviato\n");
@@ -260,7 +260,7 @@ void *thUserTX (connection *con){
 			fillPack (&packTX, mess_p, strlen (buff) + 1, buff, userBuff, WorW);
 			insert_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy),
 			                   atoi (packTX.md.whoOrWhy)); // vedere il value da mettere
-			if (writePack (con->ds_sock, &packTX) == -1){
+			if (writePack (con->ds_sock, packTX) == -1){
 				if (errno == EPIPE) exit (-1);
 				delete_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy));
 				break;

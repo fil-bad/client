@@ -85,7 +85,7 @@ int keepAlive (int *ds_sock);
 void freeConnection (connection *con);
 
 int readPack (int ds_sock, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
-int writePack (int ds_sock, mail *pack); // ma all'interno contengono la struct mail con i dati
+int writePack (int ds_sock, mail pack); // ma all'interno contengono la struct mail con i dati
 int testConnection (int ds_sock);
 
 int fillPack (mail *pack, int type, int dim, void *mex, char *sender, char *whoOrWhy);
