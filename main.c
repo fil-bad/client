@@ -204,9 +204,9 @@ void *thUserRX (connection *con){
 			break;
 		}
 
-		/*printPack (&packRX);
+		printPack (&packRX);
 		printMexBuf (packRX.mex, STDOUT_FILENO);
-		*/
+
 		/* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
 		messageRX = makeMex (packRX.mex, (int)strtol (UserID, NULL, 10));
 		if (addMex (conv, messageRX) == -1){
@@ -274,10 +274,10 @@ void *thUserTX (connection *con){
 			sleep (5);
 		}
 		unlockReadSem (avlACK.semId);
-		/*
+
 		printPack (&packTX);
 		printTextPack (&packTX);
-		*/
+
 		/* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
 		messageTX = makeMex (packTX.mex, (int)strtol (UserID, NULL, 10));
 		if (addMex (conv, messageTX) == -1){

@@ -130,6 +130,10 @@ int readPack (int ds_sock, mail *pack){
 	ssize_t bRead = 0;
 	ssize_t ret = 0;
 
+    sigset_t newSet, oldSet;
+    sigfillset (&newSet);
+    pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
+
 	do{
 		ret = read (ds_sock, &pack->md + bRead, sizeof (metadata) - bRead);
 		if (ret == -1){
@@ -186,8 +190,8 @@ int readPack (int ds_sock, mail *pack){
 		bRead += ret;
 	}
 	while (dimMex - bRead != 0);
-
-	return 0;
+    pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
+    return 0;
 }
 
 int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un mail
@@ -204,6 +208,10 @@ int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un
 	/// la funzione si aspetta che il buffer non sia modificato durante l'invio
 	ssize_t bWrite = 0;
 	ssize_t ret = 0;
+
+    sigset_t newSet, oldSet;
+    sigfillset (&newSet);
+    pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
 
 	do{
 		ret = send (ds_sock, pack + bWrite, sizeof (metadata) - bWrite, MSG_NOSIGNAL);
@@ -234,8 +242,8 @@ int writePack (int ds_sock, mail *pack) //dentro il thArg deve essere puntato un
 
 	}
 	while (dimMex - bWrite != 0);
-
-	return 0;
+    pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
+    return 0;
 }
 
 
