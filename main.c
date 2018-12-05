@@ -17,7 +17,9 @@ int chatEntry; // Index della tabella dove si trova la chat nella quale scrivere
 conversation *conv;
 sem_t semConv;
 
-avl_pp_S avlACK; // verranno messi i vessaggi in attesa di una risposta;
+avl_pp avlACK; // verranno messi i vessaggi in attesa di una risposta;
+sem_t semAVL;
+
 mex *messageTX, *messageRX;
 
 int TypeMex = mess_p; //e' il tipo del messaggio, che sara' modificato dall'handler con exitRM
@@ -146,7 +148,7 @@ showChat: // label che permette di re-listare tutte le chat
 	}
 	//* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
 
-	avlACK = init_avl_S ();
+	avlACK = init_avl();
 	printf ("Avl initialized.\n");
 
 	printf ("Entro nella room...\n");
@@ -155,6 +157,8 @@ showChat: // label che permette di re-listare tutte le chat
 
 	sem_init (&semConv, 0, 0); // inizializzamo il semaforo dei thread a 0,
 	// aspetteremo che uno dei due faccia post e poi lo reinizializziamo
+
+    sem_init (&semAVL, 0, 1);
 
 	pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	pthread_create (&tidTX, NULL, thUserTX, con);
@@ -172,7 +176,7 @@ showChat: // label che permette di re-listare tutte le chat
 	pthread_join (tidTX, &resTX);
 
 	// Elimino l'avl della conversazione, non piu' necessario
-	destroy_avl (avlACK.avlRoot);
+	destroy_avl (avlACK);
 
 	signal (SIGINT, SIG_DFL);
 
@@ -192,7 +196,9 @@ void *thUserRX (connection *con){
 			else continue;             // se e' di un'altra, continuo
 		}
 		if (packRX.md.type == messSuccess_p){
-			delete_avl_node_S (avlACK, atoi (packRX.md.whoOrWhy));
+		    sem_wait(&semAVL);
+			delete_avl_node (avlACK, atoi (packRX.md.whoOrWhy));
+			sem_post(&semAVL);
 			continue;
 		}
 		if (packRX.md.type == failed_p){
@@ -258,22 +264,26 @@ void *thUserTX (connection *con){
 		}
 		else{ // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
 			fillPack (&packTX, mess_p, strlen (buff) + 1, buff, userBuff, WorW);
-			insert_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy),
-			                   atoi (packTX.md.whoOrWhy)); // vedere il value da mettere
+			sem_wait(&semAVL);
+			insert_avl_node(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy));
+			sem_post(&semAVL);
+
 			if (writePack (con->ds_sock, packTX) == -1){
 				if (errno == EPIPE) exit (-1);
-				delete_avl_node_S (avlACK, atoi (packTX.md.whoOrWhy));
+				sem_wait(&semAVL);
+				delete_avl_node(avlACK, atoi (packTX.md.whoOrWhy));
+				sem_post(&semAVL);
 				break;
 			}
 		}
 
-		lockReadSem (avlACK.semId);
-		if ((**(avlACK.avlRoot)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
+		sem_wait(&semAVL);
+		if ((**(avlACK)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
 			printf ("Attention, AVL height is %d, there could be some problems on the server.\n",
-			        (**(avlACK.avlRoot)).height);
+			        (**(avlACK)).height);
 			sleep (5);
 		}
-		unlockReadSem (avlACK.semId);
+		sem_post(&semAVL);
 
 		printPack (&packTX);
 		printTextPack (&packTX);
