@@ -134,8 +134,10 @@ int readPack (int ds_sock, mail *pack){
     sigfillset (&newSet);
     pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
 
+    mailChar mailCRead;
+
 	do{
-		ret = read (ds_sock, &pack->md + bRead, sizeof (metadata) - bRead);
+		ret = read (ds_sock, &mailCRead.md + bRead, sizeof (metadataChar) - bRead);
 		if (ret == -1){
 			perror ("Read error; cause:");
 			return -1;
@@ -151,12 +153,21 @@ int readPack (int ds_sock, mail *pack){
 		}
 		bRead += ret;
 	}
-	while (sizeof (metadata) - bRead != 0);
+	while (sizeof (metadataChar) - bRead != 0);
+
+	//** CONVERSIONE MAIL IN INTERI **//
+
+	sscanf(mailCRead.md.dim, "%ld", &pack->md.dim);
+	sscanf(mailCRead.md.type, "%d", &pack->md.type);
+	memcpy(pack->md.sender, mailCRead.md.sender,sendDim);
+	memcpy(pack->md.whoOrWhy, mailCRead.md.whoOrWhy,wowDim);
+
+	//****//
 
 	//** Modifica per il network order**//
 
-	pack->md.type = ntohl((u_int32_t)pack->md.type);
-	pack->md.dim = ntohl((u_int32_t)pack->md.dim);
+	pack->md.type = ntohl(pack->md.type);
+	pack->md.dim = ntohl(pack->md.dim);
 
 	size_t dimMex = pack->md.dim; // manteniamo in ordine della macchina il valore del messaggio
 
@@ -200,10 +211,21 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
 
     size_t dimMex = pack.md.dim; // manteniamo in ordine della macchina il valore del messaggio
 
-    pack.md.type = htonl((u_int32_t)pack.md.type);
-    pack.md.dim = htonl((u_int32_t)pack.md.dim);
+    pack.md.type = htonl(pack.md.type);
+    pack.md.dim = htonl(pack.md.dim);
 
     //****//
+
+    //** CONVERSIONE IN MAIL A CARATTERI **//
+
+    mailChar mailCWrite;
+    sprintf(mailCWrite.md.dim, "%ld", pack.md.dim);
+	sprintf(mailCWrite.md.type, "%d", pack.md.type);
+	memcpy(mailCWrite.md.sender,pack.md.sender,sendDim);
+	memcpy(mailCWrite.md.whoOrWhy,pack.md.whoOrWhy,wowDim);
+	mailCWrite.mex = pack.mex;
+
+	//****//
 
 	/// la funzione si aspetta che il buffer non sia modificato durante l'invio
 	ssize_t bWrite = 0;
@@ -214,7 +236,7 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
     pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
 
 	do{
-		ret = send (ds_sock, &pack + bWrite, sizeof (metadata) - bWrite, MSG_NOSIGNAL);
+		ret = send (ds_sock, &mailCWrite + bWrite, sizeof (metadataChar) - bWrite, MSG_NOSIGNAL);
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 1\n");
@@ -225,12 +247,14 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
 		bWrite += ret;
 
 	}
-	while (sizeof (metadata) - bWrite != 0);
+	while (sizeof (metadataChar) - bWrite != 0);
+
+	if (dimMex == 0) return 0; //cosi' evitiamo un periodo di scrittura
 
 	bWrite = 0;
 
 	do{
-		ret = send (ds_sock, pack.mex + bWrite, dimMex - bWrite, MSG_NOSIGNAL);
+		ret = send (ds_sock, mailCWrite.mex + bWrite, dimMex - bWrite, MSG_NOSIGNAL);
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 2\n");
@@ -369,7 +393,6 @@ rescue: //risolvere consistenza stringhe
 			return -1;
 
 	}
-	return 0;
 }
 
 int registerUser (int ds_sock, mail *pack){
@@ -411,7 +434,6 @@ int registerUser (int ds_sock, mail *pack){
 			return -1;
 
 	}
-	return 0;
 }
 
 table *initClientTable (table *tabChats, mail *pack){
@@ -536,7 +558,6 @@ int createChat (int ds_sock, mail *pack, table *tabChats){
 			return -1;
 
 	}
-	return 0;
 }
 
 int deleteChat (int ds_sock, mail *pack, table *tabChats){
@@ -596,7 +617,6 @@ int deleteChat (int ds_sock, mail *pack, table *tabChats){
 			return -1;
 
 	}
-	return 0;
 }
 
 int leaveChat (int ds_sock, mail *pack, table *tabChats){
@@ -657,7 +677,6 @@ int leaveChat (int ds_sock, mail *pack, table *tabChats){
 			return -1;
 
 	}
-	return 0;
 }
 
 int joinChat (int ds_sock, mail *pack, table *tabChats){
@@ -702,7 +721,6 @@ int joinChat (int ds_sock, mail *pack, table *tabChats){
 			return -1;
 
 	}
-	return 0;
 }
 
 int openChat (int ds_sock, mail *pack, table *tabChats){
@@ -808,7 +826,6 @@ retry: // label per aggiungere i mess se ne sono arrivati nel frattempo
 			return -1;
 
 	}
-	return 0;
 }
 
 void helpChat (void){
