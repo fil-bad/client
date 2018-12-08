@@ -175,6 +175,7 @@ int readPack (int ds_sock, mail *pack){
 
 	if (dimMex == 0){
 		pack->mex = NULL;
+		pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 		return 0;
 	}
 
@@ -249,7 +250,10 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
 	}
 	while (sizeof (metadataChar) - bWrite != 0);
 
-	if (dimMex == 0) return 0; //cosi' evitiamo un periodo di scrittura
+	if (dimMex == 0){
+		pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
+		return 0;
+	} //cosi' evitiamo un periodo di scrittura
 
 	bWrite = 0;
 
