@@ -141,6 +141,7 @@ int joinChat (int ds_sock, mail *pack, table *tabChats);   // ## DONE
 int openChat (int ds_sock, mail *pack, table *tabChats);   // ## DONE
 
 void helpChat (void);
+void freeMexPack(mail *p);
 
 void *thUserRX (connection *con);
 

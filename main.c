@@ -199,6 +199,7 @@ void *thUserRX (connection *con){
 		    sem_wait(&semAVL);
 			delete_avl_node (avlACK, atoi (packRX.md.whoOrWhy));
 			sem_post(&semAVL);
+			printf("\t\t\t>>Message %s server Confirmed<<\n",packRX.md.whoOrWhy);
 			continue;
 		}
 		if (packRX.md.type == failed_p){
@@ -207,10 +208,11 @@ void *thUserRX (connection *con){
 		} //ignoro questo stato
 		if (packRX.md.type != mess_p){
 			printf ("Unexpected pack; going to main menu...\n");
+			printPack (&packRX);
 			break;
 		}
 
-		printPack (&packRX);
+		//printPack (&packRX);
 		printMexBuf (packRX.mex, STDOUT_FILENO);
 
 		/* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
@@ -224,8 +226,8 @@ void *thUserRX (connection *con){
 
 	if (packRX.md.type == delRm_p) delEntry (tabChats, chatEntry);
 
-	free (packRX.mex);
-	free (packTX.mex);
+	freeMexPack(&packTX);
+	freeMexPack(&packRX);
 
 	sem_post (&semConv);
 	return NULL;
@@ -296,9 +298,8 @@ void *thUserTX (connection *con){
 		}
 	}
 	while (packTX.md.type != exitRm_p);
-
-	if (packTX.mex) free (packTX.mex);
-	if (packTX.mex) free (packRX.mex);
+	freeMexPack(&packTX);
+	freeMexPack(&packRX);
 	sem_post (&semConv);
 	return NULL;
 }
@@ -309,7 +310,7 @@ void helpProject (){
 }
 
 int main (int argc, char *argv[]){
-
+	fdDebug = 1;
 	if (argc == 4){
 		if (clientDemo (argc, argv) == -1){
 			return -1;

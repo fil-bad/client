@@ -124,22 +124,24 @@ void freeConnection (connection *con){
 	free (con);
 }
 
-int readPack (int ds_sock, mail *pack){
+int readPack (int ds_sock, mail *pack)
+{
 
 	int iterContr = 0; // vediamo se la read fallisce
 	ssize_t bRead = 0;
 	ssize_t ret = 0;
 
-    sigset_t newSet, oldSet;
-    sigfillset (&newSet);
-    pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
+	sigset_t newSet, oldSet;
+	sigfillset (&newSet);
+	pthread_sigmask (SIG_SETMASK, &newSet, &oldSet);
 
-    mailChar mailCRead;
+	mailChar mailCRead;
 
 	do{
 		ret = read (ds_sock, &mailCRead.md + bRead, sizeof (metadataChar) - bRead);
 		if (ret == -1){
 			perror ("Read error; cause:");
+			pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 			return -1;
 		}
 		if (ret == 0){
@@ -147,6 +149,7 @@ int readPack (int ds_sock, mail *pack){
 			if (iterContr > 2){
 				dprintf (STDERR_FILENO, "Seems Read can't go further; test connection...\n");
 				if (testConnection (ds_sock) == -1){
+					pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 					return -1;
 				}
 			}
@@ -165,10 +168,10 @@ int readPack (int ds_sock, mail *pack){
 	//****//
 
 	//** Modifica per il network order**//
-
+	/*
 	pack->md.type = ntohl(pack->md.type);
 	pack->md.dim = ntohl(pack->md.dim);
-
+	*/
 	size_t dimMex = pack->md.dim; // manteniamo in ordine della macchina il valore del messaggio
 
 	//****//
@@ -188,6 +191,7 @@ int readPack (int ds_sock, mail *pack){
 		ret = read (ds_sock, pack->mex + bRead, dimMex - bRead);
 		if (ret == -1){
 			perror ("Read error; cause:");
+			pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 			return -1;
 		}
 		if (ret == 0){
@@ -195,6 +199,7 @@ int readPack (int ds_sock, mail *pack){
 			if (iterContr > 2){
 				dprintf (STDERR_FILENO, "Seems Read can't go further; test connection...\n");
 				if (testConnection (ds_sock) == -1){
+					pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 					return -1;
 				}
 			}
@@ -202,8 +207,8 @@ int readPack (int ds_sock, mail *pack){
 		bRead += ret;
 	}
 	while (dimMex - bRead != 0);
-    pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
-    return 0;
+	pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
+	return 0;
 }
 
 int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un mail
@@ -212,9 +217,9 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
 
     size_t dimMex = pack.md.dim; // manteniamo in ordine della macchina il valore del messaggio
 
-    pack.md.type = htonl(pack.md.type);
+    /*pack.md.type = htonl(pack.md.type);
     pack.md.dim = htonl(pack.md.dim);
-
+	*/
     //****//
 
     //** CONVERSIONE IN MAIL A CARATTERI **//
@@ -241,6 +246,7 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 1\n");
+				pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 				return -1;
 				//GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
 			}
@@ -262,6 +268,7 @@ int writePack (int ds_sock, mail pack) //dentro il thArg deve essere puntato un 
 		if (ret == -1){
 			if (errno == EPIPE){
 				dprintf (STDERR_FILENO, "write pack pipe break 2\n");
+				pthread_sigmask (SIG_SETMASK, &oldSet, &newSet);   //restora tutto
 				return -1;
 				//GESTIRE LA CHIUSURA DEL SOCKET (LA CONNESSIONE E' STATA INTERROTTA IMPROVVISAMENTE)
 			}
@@ -348,10 +355,11 @@ int initClient (connection *c){
 
 char *obtainStr (char *buff, int len){
 	char bufApp[2048];
+	memset (bufApp, 0, 2048);
 antiSegFault:
 	scanf ("%[^\n]", bufApp);
 	while (getchar () != '\n');
-	//if (buff == NULL) goto antiSegFault;
+	if (strlen (bufApp) == 0) goto antiSegFault;
 	strncpy (buff, bufApp, len);
 	buff[len - 1] = '\0';
 	return buff;
@@ -838,4 +846,12 @@ void helpChat (void){
 	printf ("LeaveChat: lascia un canale di conversazione.\n");
 	printf ("OpenChat: apre un canale esistente di conversazione.\n");
 	printf ("JoinChat: partecipa a un nuovo canale di conversazione.\n");
+}
+
+void freeMexPack(mail *p)
+{
+	if (!p->mex){
+		free (p->mex);
+		p->mex = NULL;
+	}
 }
