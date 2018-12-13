@@ -120,10 +120,6 @@ int keepAlive (int *ds_sock){
 	return 0;
 }
 
-void freeConnection (connection *con){
-	free (con);
-}
-
 int readPack (int ds_sock, mail *pack)
 {
 

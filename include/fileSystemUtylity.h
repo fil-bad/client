@@ -26,106 +26,12 @@
 #include "mexData.h"
 
 
-typedef struct nameList{
-	int nMemb;
-	char **names;
-} nameList;
-
-typedef struct serverStatFile_{
-	long idKeyUser;
-	long idKeyChat;
-	char serverTimeCreate[64];
-	char firmware_V[64];
-} serverStatFile;
-
-typedef struct serverStat_{
-	serverStatFile statFile;
-	int fd;             //quando chiuso a -2, -1 è per gli errori
-	sem_t lock;
-
-} serverStat;
-
-typedef struct infoChat_{
-	table *tab;
-	conversation *conv;
-	char myName[128];   //path della mia chat
-	int fdTemp;         //file temporaneo, probabilemente non serve più
-} infoChat;
-
-typedef struct infoUser_{
-	table *tab;         //struttura tab
-	char pathName[128];   //path name of dir user
-} infoUser;
-
-///GLOBAL VARIABLE
-
-serverStat serStat;
 
 /** PROTOTIPI   **/
 
 ///CLIENT
 // Inizializzazione client
 int StartClientStorage (char *storage_name);
-
-///Funzioni di avvio e terminazione Server
-
-///Funzioni per operare sulle chat
-infoChat *newRoom (char *name, int adminId);
-
-infoChat *openRoom (char *pathDir);
-
-infoUser *newUser (char *name);
-
-infoUser *openUser (char *pathDir);
-
-int lockDirFile (char *pathDir);
-
-
-///Funzioni di supporto al file conf
-int creatServerStatConf ();
-
-int overrideServerStatConf ();
-
-void printFcntlFile (int fd);
-
-void printServStat (int FdOut);
-
-int serStat_addUs_lock ();
-
-long readSerStat_idKeyUser_lock ();
-
-int serStat_addchat_lock ();
-
-long readSerStat_idKeyChat_lock ();
-
-
-///Funzioni di scan della directory
-/*Metodi per operare sul database lato fileSystem*/
-nameList *chatRoomExist ();
-
-nameList *userExist ();
-
-nameList *allDir ();
-
-void nameListFree (nameList *nl);
-
-///Funzioni per filtrare gli elementi
-/*scandir permette di filtrare i file, mettendo nella lista solo quelli che ritornano !=0
- * Di seguito tutte le funzioni create per i vari filtri
- */
-int filterDirChat (const struct dirent *entry);
-
-int filterDir (const struct dirent *entry);
-
-int filterDirAndFile (const struct dirent *entry);
-
-char *fileType (unsigned char d_type, char *externalBuf, int bufLen);
-
-///Funzioni per visualizzare gli elementi
-void nameListPrint (nameList *nameList);
-
-void infoChatPrint (infoChat *info);
-
 
 #endif //CLIENT_FILESYSTEMUTYLITY_H
 

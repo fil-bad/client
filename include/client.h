@@ -77,19 +77,10 @@ typedef struct mailChar_{
 	void *mex;
 } mailChar;
 
-
-
-
-
 typedef struct connection_{
 	int ds_sock;
 	struct sockaddr_in sock;
 } connection;
-
-typedef struct thConnArg_{
-	connection con;
-	void *arg;
-} thConnArg;
 
 // PROTOTIPI DI FUNZIONE:
 
@@ -100,8 +91,6 @@ char *typeToText (int type);
 connection *initSocket (u_int16_t port, char *IP);
 
 int keepAlive (int *ds_sock);
-
-void freeConnection (connection *con);
 
 int readPack (int ds_sock, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
 int writePack (int ds_sock, mail pack); // ma all'interno contengono la struct mail con i dati
@@ -114,9 +103,6 @@ void printPack (mail *pack);
 void printTextPack (mail *pack); //versione con solo testo;
 
 ///Client FUNCTION
-int readPack_inside (int fdPipe, mail *pack);  // queste due funzioni prendono il pacchetto thread-specifico
-int writePack_inside (int fdPipe, mail *pack); // ma all'interno contengono la struct mail con i dati
-
 
 int initClient (connection *c);
 

@@ -6,27 +6,6 @@
 
 ///Funzioni di interfaccia
 
-conversation *initConv (char *path, int adminId){
-	conversation c;
-	c.stream = openConfStream (path);
-	if (setUpConvF (adminId, c.stream)){
-		char buf[128]; // buff per creare la tringa di errore dinamicamente
-		switch (errno){
-			case EEXIST:
-				//tutto ok, posso andare avanti, è una semplice apertura
-				break;
-			default:
-
-				sprintf (buf, "open file %s, take error:", path);
-				perror (buf);
-				return NULL;
-				break;
-		}
-	}
-
-	return loadConvF (c.stream);
-}
-
 FILE *openConfStream (char *path){
 	int confFd = open (path, O_RDWR | O_CREAT, 0666);
 	if (confFd == -1){
@@ -94,34 +73,7 @@ mex *makeMexBuf (size_t len, char *bufMex){
 	return m;
 }
 
-int freeConv (conversation *c){
-
-	//libero tutti i messaggi
-	for (int i = 0; i < c->head.nMex; i++){
-		freeMex (c->mexList[i]);
-	}
-	fclose (c->stream);
-	free (c);    //dopo aver liberato e chiuso tutto libero la memoria
-	return 0;
-}
-
 ///Funzioni verso File
-
-int setUpConvF (int adminId, FILE *stream){
-	struct stat streamInfo;
-	fstat (fileno (stream), &streamInfo);
-	if (streamInfo.st_size != 0)     //il file era già esistente e contiene dei dati
-	{
-		errno = EEXIST; //file descriptor non valido, perchè il file contiene già qualcosa
-		return -1;
-	}
-	conversation newCon;
-	newCon.head.adminId = adminId;
-	newCon.head.nMex = 0;
-	newCon.head.timeCreate = currTimeSys ();
-	overrideHeadF (&newCon.head, stream);
-	return 0;
-}
 
 int overrideHeadF (convInfo *cI, FILE *stream){
 	flockfile (stream);
@@ -225,7 +177,7 @@ int fWriteF (FILE *f, size_t sizeElem, int nelem, void *dat){
 		if (ferror (f) != 0)    // testo solo per errori perchè in scrittura l'endOfFile Cresce
 		{
 			// è presente un errore in scrittura
-			errno = EBADFD;   //file descriptor in bad state
+			errno = EBADF;   //file descriptor in bad state
 			return -1;
 		}
 		//dprintf(fdOut,"prima fwrite; dat=%p\n",dat);
@@ -241,7 +193,7 @@ int fReadF (FILE *f, size_t sizeElem, int nelem, void *save){
 		if (ferror (f) != 0)    // testo solo per errori perchè in scrittura l'endOfFile Cresce
 		{
 			// è presente un errore in scrittura
-			errno = EBADFD;   //file descriptor in bad state
+			errno = EBADF;   //file descriptor in bad state
 			return -1;
 		}
 		cont += fread (save + cont, 1, sizeElem * nelem - cont, f);
@@ -319,7 +271,7 @@ void printMexBuf (char *buf, int fdOutP){
 	memcpy (&m, buf, sizeof (mexInfo));
 	m.text = buf + sizeof (mexInfo);
 
-	dprintf (fdOutP, "Mex buf data Store locate in=%p:\n", buf);
+	dprintf(fdOutP, "Mex buf data Store locate in=%s:\n", buf);
 	dprintf (fdOutP, "info.usId\t-> %d\n", m.info.usId);
 	dprintf (fdOutP, "time Message\t-> %s", timeString (m.info.timeM));
 	if (m.text != NULL){

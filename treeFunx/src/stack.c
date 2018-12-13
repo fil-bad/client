@@ -60,16 +60,6 @@ void *pop (d_stack_p stack){
 }
 
 /*
- * Check if a stack has any elements
- */
-bool isStackEmpty (d_stack_p stack){
-	if (get_head_dlist (stack->head))
-		return TRUE;
-
-	return FALSE;
-}
-
-/*
  * Deallocate all dlist nodes
  * Destroy Stack
  */

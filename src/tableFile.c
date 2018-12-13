@@ -7,29 +7,6 @@
 /// Funzioni di Interfaccia operanti su Tabella
 
 /** La funzione ha lo scopo di creare una tabella completamente nuova in memoria **/
-table *init_Tab (char *path, char *name){
-	//path è l'indirizzo della cartella/NOME_FILE sulla quale creare la tabella
-	//roomPath è il nome scritto in first-Free
-	table *t;
-	FILE *f;
-	f = openTabF (path);
-	if (setUpTabF (f, name)){
-		char buf[128]; // buff per creare la tringa di errore dinamicamente
-		switch (errno){
-			case EEXIST:
-				//tutto ok, posso andare avanti, è una semplice apertura
-				break;
-			default:
-
-				sprintf (buf, "open file %s, take error:", path);
-				perror (buf);
-				return NULL;
-				break;
-		}
-	}
-	t = makeTable (f);
-	return t;
-}
 
 table *open_Tab (char *path){
 	FILE *f;
@@ -91,47 +68,6 @@ int delEntry (table *t, int index){
 	return 0;
 }
 
-table *compressTable (table *t){
-
-	if (t->head.counter == 1){
-		//il file è già alla dimensione minima
-		return 0;
-	}
-	int enNotEmpty_Id[t->head.len];
-	int newLen = 0;
-	///ottengo gli id per i quali ho entry valide e anche la nuova lunghezza
-	for (int i = 0; i < t->head.len; ++i){
-		if (!isEmptyEntry (&t->data[i])){
-			//se non è una cella vuota allora posso copiarla
-			enNotEmpty_Id[newLen] = i;
-			newLen++;
-		}
-	}
-
-	/// creo una nuova lista della dimensione giusta e ci copio solo le entry non vuote
-	entry *newData = (entry *)calloc (newLen, sizeof (entry));
-	for (int j = 0; j < newLen; ++j){
-		memcpy (&newData[j], &t->data[enNotEmpty_Id[j]], sizeof (entry));
-	}
-	free (t->data);          //libero la vecchia lista non più utile
-	t->data = newData;        //punto la nuova lista creata e compatta
-	t->head.len = newLen;     //first aggiorna la lunghezza
-	t->head.counter = 1;      //ora sarà presente solo last-free
-	t->head.nf_id = newLen - 1; //last-free si trova a len-1
-
-	flockfile (t->stream);
-	if (ftruncate (fileno (t->stream), sizeof (firstFree) + sizeof (entry) * newLen)){
-		perror ("Tunck File take error:");
-		return -1;
-	}
-	rewind (t->stream);
-	fileWrite (t->stream, sizeof (firstFree), 1, &t->head);
-	fileWrite (t->stream, sizeof (entry), newLen, t->data);
-	funlockfile (t->stream);
-
-	return t;
-}
-
 int searchFirstOccurrence (table *t, char *search){
 	for (int i = 0; i < t->head.len; i++){
 		if (strcmp (t->data[i].name, search) == 0){
@@ -144,15 +80,6 @@ int searchFirstOccurrence (table *t, char *search){
 int searchFirstOccurrenceKey (table *t, int ID){
 	for (int i = 0; i < t->head.len; i++){
 		if (strtol (t->data[i].name, NULL, 10) == ID){
-			return i;
-		}
-	}
-	return -1;
-}
-
-int searchOccurrenceBy (table *t, char *search, int idStart){
-	for (int i = idStart; i < t->head.len; i++){
-		if (strcmp (t->data[i].name, search) == 0){
 			return i;
 		}
 	}
@@ -182,43 +109,6 @@ FILE *openTabF (char *path){
 	return f;
 
 }
-
-int setUpTabF (FILE *tab, char *name){
-	struct stat tabInfo;
-	fstat (fileno (tab), &tabInfo);
-	if (tabInfo.st_size != 0)     //il file era già esistente e contiene dei dati
-	{
-		errno = EEXIST; //file descriptor non valido, perchè il file contiene già qualcosa
-		return -1;
-	}
-
-	/// setup di firstFree
-	firstFree head;
-	strncpy (head.name, name, nameFirstFreeSize);
-	head.counter = 1;
-	head.len = 1;
-	head.nf_id = 0;
-	/// setup di last
-	entry last;
-	memset (last.name, 0, nameEntrySize);
-	last.point = -1;
-
-	///File write
-	flockfile (tab);
-	if (fileWrite (tab, sizeof (firstFree), 1, &head)){
-		perror ("Write FirstFree setup take error:");
-		return -1;
-	}
-	dprintf (fdOut, "first-free setup\n");
-	if (fileWrite (tab, sizeof (entry), 1, &last)){
-		perror ("Write last-entry setup take error:");
-		return -1;
-	}
-	dprintf (fdOut, "last-entry setup\n");
-	funlockfile (tab);
-	return 0; //all ok
-}
-
 
 int addEntryTabF (FILE *tab, char *name, int data){
 	/** L'operazione è eseguita in modo atomico rispetto ai Tread del processo **/
@@ -375,7 +265,7 @@ int fileWrite (FILE *f, size_t sizeElem, int nelem, void *dat){
 		if (ferror (f) != 0)    // testo solo per errori perchè in scrittura l'endOfFile Cresce
 		{
 			// è presente un errore in scrittura
-			errno = EBADFD;   //file descriptor in bad state
+			errno = EBADF;   //file descriptor in bad state
 			return -1;
 		}
 		cont += fwrite (dat + cont, 1, sizeElem * nelem - cont, f);
@@ -387,13 +277,11 @@ int fileWrite (FILE *f, size_t sizeElem, int nelem, void *dat){
 void firstPrint (firstFree *f){
 	dprintf (fdOut, "#1\tfirstFree data Store:\nname\t\t-> %s\ncouterFree\t-> %d\nLen\t\t-> %d\nnextFree\t-> %d\n",
 	         f->name, f->counter, f->len, f->nf_id);
-	return;
 }
 
 void entryPrint (entry *e){
 	dprintf (fdOut, "Entry data Store:\n??-Last-Free -> %s\tempty  -> %s\nname\t\t-> %s\npoint\t\t-> %d\n",
 	         booleanPrint (isLastEntry (e)), booleanPrint (isEmptyEntry (e)), e->name, e->point);
-	return;
 }
 
 void tabPrint (table *tab){
@@ -407,9 +295,9 @@ void tabPrint (table *tab){
 	size_t lenFile = lenTabF (tab->stream);
 
 	dprintf (fdOut, "-------------------------------------------------------------\n");
-	dprintf (fdOut, "\tLa tabella ha le seguenti caratteristiche:\n\tsize=%d\n\tlenFile=%d\tlenFirst=%d\n",
-	         tabInfo.st_size, lenFile, tab->head.len);
-	dprintf (fdOut, "\tsizeof(entry)=%d\tsizeof(firstFree)=%d\n", sizeof (entry), sizeof (firstFree));
+	dprintf(fdOut, "\tLa tabella ha le seguenti caratteristiche:\n\tsize=%ld\n\tlenFile=%ld\tlenFirst=%d\n",
+			tabInfo.st_size, lenFile, tab->head.len);
+	dprintf(fdOut, "\tsizeof(entry)=%ld\tsizeof(firstFree)=%ld\n", sizeof(entry), sizeof(firstFree));
 	dprintf (fdOut, "\n\t[][]La tabella contenuta nel file contiene:[][]\n\n");
 	firstPrint (&tab->head);
 	dprintf (fdOut, "##########\n\n");
@@ -419,19 +307,9 @@ void tabPrint (table *tab){
 		dprintf (fdOut, "**********\n");
 	}
 	dprintf (fdOut, "-------------------------------------------------------------\n");
-	return;
-}
-
-void tabPrintFile (FILE *tab){
-	table *t = makeTable (tab);
-	dprintf (fdOut, "\t#@#@#@[] Print da File System []@#@#@#\n");
-	tabPrint (t);
-	freeTable (t);
-	return;
 }
 
 ///funzioni di supporto operanti in ram
-
 
 int isLastEntry (entry *e){
 	if (e->name[0] == 0 && e->point == -1) return 1;
@@ -469,9 +347,4 @@ table *makeTable (FILE *tab){
 	funlockfile (tab);
 	t->stream = tab;
 	return t;
-}
-
-void freeTable (table *t){
-	free (t->data);
-	free (t);
 }

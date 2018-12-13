@@ -48,7 +48,6 @@ typedef struct table_{
 /** Prototipi **/
 
 /// Funzioni di Interfaccia operanti su Tabella
-table *init_Tab (char *path_file, char *name_tab);
 
 table *open_Tab (char *path_file);
 
@@ -56,19 +55,12 @@ int addEntry (table *table, char *name, int data);
 
 int delEntry (table *table, int index);
 
-table *compressTable (table *table);
-
 int searchFirstOccurrence (table *tabel, char *search);
 
 int searchFirstOccurrenceKey (table *t, int ID);
 
-int searchOccurrenceBy (table *tabel, char *search, int startIndex);
-
-
 /// Funzioni di supporto operanti sul file
 FILE *openTabF (char *path_file);
-
-int setUpTabF (FILE *fdTable, char *name_Table);
 
 int addEntryTabF (FILE *fdTable, char *name, int data);
 
@@ -88,8 +80,6 @@ void entryPrint (entry *en);
 
 void tabPrint (table *tab);
 
-void tabPrintFile (FILE *fdTable);
-
 ///funzioni di supporto
 int isLastEntry (entry *en);
 
@@ -98,8 +88,6 @@ int isEmptyEntry (entry *en);
 char *booleanPrint (int val);
 
 table *makeTable (FILE *fdTable);
-
-void freeTable (table *table);
 
 #endif //FILETAB_DEMO_TABLEFILE_H
 

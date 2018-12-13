@@ -48,8 +48,6 @@ typedef struct conversation_{
 
 ///Funzioni di interfaccia
 
-conversation *initConv (char *path, int adminId);
-
 FILE *openConfStream (char *path);
 
 conversation *openConf (char *convPath);
@@ -60,11 +58,7 @@ mex *makeMex (char *text, int usId);
 
 mex *makeMexBuf (size_t len, char *bufMex);
 
-int freeConv (conversation *c);
-
-
 ///Funzioni verso File
-int setUpConvF (int adminId, FILE *stream);
 
 int overrideHeadF (convInfo *cI, FILE *stream);
 
@@ -87,7 +81,6 @@ void printConv (conversation *c, int fdOutP);
 void printMex (mex *m, int fdOutP);
 
 void printMexBuf (char *m, int fdOutP);
-
 
 void printConvInfo (convInfo *cI, int fdOutP);
 

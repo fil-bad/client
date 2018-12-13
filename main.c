@@ -190,14 +190,14 @@ void *thUserRX (connection *con){
 			//break;
 		}
 		if (packRX.md.type == delRm_p){ //potrei riceverlo di un'altra chat
-			int entCH = atoi (packRX.md.whoOrWhy);
+			int entCH = (int) strtol(packRX.md.whoOrWhy, NULL, 10);
 			delEntry (tabChats, entCH);
 			if (entCH == chatEntry) break; // se e' della chat esco dalla RX
 			else continue;             // se e' di un'altra, continuo
 		}
 		if (packRX.md.type == messSuccess_p){
 		    sem_wait(&semAVL);
-			delete_avl_node (avlACK, atoi (packRX.md.whoOrWhy));
+			delete_avl_node(avlACK, (int) strtol(packRX.md.whoOrWhy, NULL, 10));
 			sem_post(&semAVL);
 			printf("\t\t\t>>Message %s server Confirmed<<\n",packRX.md.whoOrWhy);
 			continue;
@@ -265,15 +265,16 @@ void *thUserTX (connection *con){
 			break;
 		}
 		else{ // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
-			fillPack (&packTX, mess_p, strlen (buff) + 1, buff, userBuff, WorW);
+			fillPack(&packTX, mess_p, (int) strlen(buff) + 1, buff, userBuff, WorW);
 			sem_wait(&semAVL);
-			insert_avl_node(avlACK, atoi(packTX.md.whoOrWhy), atoi(packTX.md.whoOrWhy));
+			insert_avl_node(avlACK, (int) strtol(packTX.md.whoOrWhy, NULL, 10),
+							(int) strtol(packTX.md.whoOrWhy, NULL, 10));
 			sem_post(&semAVL);
 
 			if (writePack (con->ds_sock, packTX) == -1){
 				if (errno == EPIPE) exit (-1);
 				sem_wait(&semAVL);
-				delete_avl_node(avlACK, atoi (packTX.md.whoOrWhy));
+				delete_avl_node(avlACK, (int) strtol(packTX.md.whoOrWhy, NULL, 10));
 				sem_post(&semAVL);
 				break;
 			}

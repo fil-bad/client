@@ -27,7 +27,6 @@ char *logarr[] = {"ERROR", "INFO", "DEBUG"};
 ///FUNZIONE DEPRECATA
 void debug_log (
 		const char *file, const char *func, int line, int level, const char *format, ...){
-	return;
 	/*
 	va_list ap;
 

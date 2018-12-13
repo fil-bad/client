@@ -24,8 +24,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define ERROR 0
-#define INFO 1
 #define DEBUG 2
 
 #define log(level, format, ...) \
