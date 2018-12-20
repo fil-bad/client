@@ -9,12 +9,12 @@
 FILE *openConfStream (char *path){
 	int confFd = open (path, O_RDWR | O_CREAT, 0666);
 	if (confFd == -1){
-		perror ("open FD for Tab take error:");
+		perror ("open FD for Conv take error:");
 		return NULL;
 	}
 	FILE *f = fdopen (confFd, "r+");
 	if (f == NULL){
-		perror ("tab open error:");
+		perror ("Conv open error:");
 		return NULL;
 	}
 	return f;
@@ -23,7 +23,7 @@ FILE *openConfStream (char *path){
 conversation *openConf (char *convPath){
 	FILE *f = openConfStream (convPath);
 	if (f == NULL){
-		perror ("tab open error:");
+		perror ("Conv open error:");
 		return NULL;
 	}
 	return loadConvF (f);

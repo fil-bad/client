@@ -295,9 +295,9 @@ void tabPrint (table *tab){
 	size_t lenFile = lenTabF (tab->stream);
 
 	dprintf (fdOut, "-------------------------------------------------------------\n");
-	dprintf(fdOut, "\tLa tabella ha le seguenti caratteristiche:\n\tsize=%ld\n\tlenFile=%ld\tlenFirst=%d\n",
-			tabInfo.st_size, lenFile, tab->head.len);
-	dprintf(fdOut, "\tsizeof(entry)=%ld\tsizeof(firstFree)=%ld\n", sizeof(entry), sizeof(firstFree));
+	dprintf (fdOut, "\tLa tabella ha le seguenti caratteristiche:\n\tsize=%ld\n\tlenFile=%ld\tlenFirst=%d\n",
+	         tabInfo.st_size, lenFile, tab->head.len);
+	dprintf (fdOut, "\tsizeof(entry)=%ld\tsizeof(firstFree)=%ld\n", sizeof (entry), sizeof (firstFree));
 	dprintf (fdOut, "\n\t[][]La tabella contenuta nel file contiene:[][]\n\n");
 	firstPrint (&tab->head);
 	dprintf (fdOut, "##########\n\n");
@@ -338,13 +338,26 @@ table *makeTable (FILE *tab){
 	size_t len = lenTabF (tab);
 
 	table *t = (table *)malloc (sizeof (table));
-	t->data = (entry *)calloc (len, sizeof (entry));
+	if (len == 0){
+		t->data = (entry *)calloc (1, sizeof (entry));
+		t->data[0].name[0] = 0;
+		t->data[0].point = -1;
+		flockfile (tab);
+		rewind (tab);
+		fread (&t->head, 1, sizeof (firstFree), tab);
+		funlockfile (tab);
+		t->stream = tab;
+		return t;
 
-	flockfile (tab);
-	rewind (tab);
-	fread (&t->head, 1, sizeof (firstFree), tab);
-	fread (t->data, 1, sizeof (entry) * len, tab);
-	funlockfile (tab);
-	t->stream = tab;
-	return t;
+	}
+	else{
+		t->data = (entry *)calloc (len, sizeof (entry));
+		flockfile (tab);
+		rewind (tab);
+		fread (&t->head, 1, sizeof (firstFree), tab);
+		fread (t->data, 1, sizeof (entry) * len, tab);
+		funlockfile (tab);
+		t->stream = tab;
+		return t;
+	}
 }

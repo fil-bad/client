@@ -330,7 +330,7 @@ void printPack (mail *pack){
 void printTextPack (mail *pack){
 	if (pack)
 		if (pack->mex)
-			printf ("(%s):\t%s\n\n", pack->md.sender, (char *)pack->mex);
+			printf ("\t\t\t\t(%s):%s\n\n", pack->md.sender, (char *)pack->mex);
 }
 
 

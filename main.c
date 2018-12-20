@@ -212,7 +212,7 @@ void *thUserRX (connection *con){
 			break;
 		}
 
-		//printPack (&packRX);
+		//printTextPack (&packRX);
 		printMexBuf (packRX.mex, STDOUT_FILENO);
 
 		/* PARTE INSERIMENTO IN CONV DEI MESSAGGI*/
@@ -244,7 +244,7 @@ void *thUserTX (connection *con){
 	userBuff[sendDim - 1] = '\0';
 	TypeMex = mess_p;
 
-	printf ("Inserire un messaggio ('-q' o CTRL+C & 'any Button' per terminare):");
+	printf ("Inserire un messaggio ('-q' per terminare):");
 
 	do{
 		printf ("\n>>> ");
