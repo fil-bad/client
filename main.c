@@ -148,7 +148,7 @@ showChat: // label che permette di re-listare tutte le chat
 	}
 	//* INIZIALIZZO OGNI VOLTA L'AVL SE NON ERA STATO CREATO*//
 
-	avlACK = init_avl();
+	avlACK = init_avl ();
 	printf ("Avl initialized.\n");
 
 	printf ("Entro nella room...\n");
@@ -158,7 +158,7 @@ showChat: // label che permette di re-listare tutte le chat
 	sem_init (&semConv, 0, 0); // inizializzamo il semaforo dei thread a 0,
 	// aspetteremo che uno dei due faccia post e poi lo reinizializziamo
 
-    sem_init (&semAVL, 0, 1);
+	sem_init (&semAVL, 0, 1);
 
 	pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	pthread_create (&tidTX, NULL, thUserTX, con);
@@ -190,16 +190,16 @@ void *thUserRX (connection *con){
 			//break;
 		}
 		if (packRX.md.type == delRm_p){ //potrei riceverlo di un'altra chat
-			int entCH = (int) strtol(packRX.md.whoOrWhy, NULL, 10);
+			int entCH = (int)strtol (packRX.md.whoOrWhy, NULL, 10);
 			delEntry (tabChats, entCH);
 			if (entCH == chatEntry) break; // se e' della chat esco dalla RX
 			else continue;             // se e' di un'altra, continuo
 		}
 		if (packRX.md.type == messSuccess_p){
-		    sem_wait(&semAVL);
-			delete_avl_node(avlACK, (int) strtol(packRX.md.whoOrWhy, NULL, 10));
-			sem_post(&semAVL);
-			printf("\t\t\t>>Message %s server Confirmed<<\n",packRX.md.whoOrWhy);
+			sem_wait (&semAVL);
+			delete_avl_node (avlACK, (int)strtol (packRX.md.whoOrWhy, NULL, 10));
+			sem_post (&semAVL);
+			printf ("\t\t\t>>Message %s server Confirmed<<\n", packRX.md.whoOrWhy);
 			continue;
 		}
 		if (packRX.md.type == failed_p){
@@ -226,8 +226,8 @@ void *thUserRX (connection *con){
 
 	if (packRX.md.type == delRm_p) delEntry (tabChats, chatEntry);
 
-	freeMexPack(&packTX);
-	freeMexPack(&packRX);
+	freeMexPack (&packTX);
+	freeMexPack (&packRX);
 
 	sem_post (&semConv);
 	return NULL;
@@ -244,7 +244,7 @@ void *thUserTX (connection *con){
 	userBuff[sendDim - 1] = '\0';
 	TypeMex = mess_p;
 
-	printf ("Inserire un messaggio ('-q' o CTRL+C per terminare):");
+	printf ("Inserire un messaggio ('-q' o CTRL+C & 'any Button' per terminare):");
 
 	do{
 		printf ("\n>>> ");
@@ -265,28 +265,27 @@ void *thUserTX (connection *con){
 			break;
 		}
 		else{ // altrimenti mandiamo come tipo mess_p e il messaggio scritto in precedenza
-			fillPack(&packTX, mess_p, (int) strlen(buff) + 1, buff, userBuff, WorW);
-			sem_wait(&semAVL);
-			insert_avl_node(avlACK, (int) strtol(packTX.md.whoOrWhy, NULL, 10),
-							(int) strtol(packTX.md.whoOrWhy, NULL, 10));
-			sem_post(&semAVL);
+			fillPack (&packTX, mess_p, (int)strlen (buff) + 1, buff, userBuff, WorW);
+			sem_wait (&semAVL);
+			insert_avl_node (avlACK, (int)strtol (packTX.md.whoOrWhy, NULL, 10),
+			                 (int)strtol (packTX.md.whoOrWhy, NULL, 10));
+			sem_post (&semAVL);
 
 			if (writePack (con->ds_sock, packTX) == -1){
 				if (errno == EPIPE) exit (-1);
-				sem_wait(&semAVL);
-				delete_avl_node(avlACK, (int) strtol(packTX.md.whoOrWhy, NULL, 10));
-				sem_post(&semAVL);
+				sem_wait (&semAVL);
+				delete_avl_node (avlACK, (int)strtol (packTX.md.whoOrWhy, NULL, 10));
+				sem_post (&semAVL);
 				break;
 			}
 		}
 
-		sem_wait(&semAVL);
+		sem_wait (&semAVL);
 		if ((**(avlACK)).height > 4){ // quindi almeno 2^5 = 32 success pendenti
-			printf ("Attention, AVL height is %d, there could be some problems on the server.\n",
-			        (**(avlACK)).height);
+			printf ("Attention, AVL height is %d, there could be some problems on the server.\n", (**(avlACK)).height);
 			sleep (5);
 		}
-		sem_post(&semAVL);
+		sem_post (&semAVL);
 
 		printPack (&packTX);
 		printTextPack (&packTX);
@@ -299,8 +298,8 @@ void *thUserTX (connection *con){
 		}
 	}
 	while (packTX.md.type != exitRm_p);
-	freeMexPack(&packTX);
-	freeMexPack(&packRX);
+	freeMexPack (&packTX);
+	freeMexPack (&packRX);
 	sem_post (&semConv);
 	return NULL;
 }
