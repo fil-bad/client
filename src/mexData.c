@@ -118,9 +118,7 @@ conversation *loadConvF (FILE *stream){
 	struct stat streamInfo;
 	fstat (fileno (stream), &streamInfo);
 	if (streamInfo.st_size == 0){
-		printf ("fstat = 0\n");
 		funlockfile (stream);
-		printf ("flock rilasciato 1\n");
 		conv->head.nMex = 0;
 		conv->mexList = NULL;
 		return conv;
@@ -141,6 +139,7 @@ conversation *loadConvF (FILE *stream){
 	if (streamInfo.st_size == sizeof (conv->head)){
 		//non sono presenti messaggi e ho una conversazione vuota
 		dprintf (fdOut, "File conInfo solo testa\n");
+		conv->mexList = NULL;
 		return conv;
 	}
 	conv->mexList = calloc (conv->head.nMex, sizeof (mex *));   //creo un array di puntatori a mex
@@ -271,7 +270,7 @@ void printMexBuf (char *buf, int fdOutP){
 	memcpy (&m, buf, sizeof (mexInfo));
 	m.text = buf + sizeof (mexInfo);
 
-	dprintf(fdOutP, "Mex buf data Store locate in=%s:\n", buf);
+	dprintf (fdOutP, "Mex buf data Store locate in=%s:\n", buf);
 	dprintf (fdOutP, "info.usId\t-> %d\n", m.info.usId);
 	dprintf (fdOutP, "time Message\t-> %s", timeString (m.info.timeM));
 	if (m.text != NULL){
